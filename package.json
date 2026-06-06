@@ -1,0 +1,16 @@
+{
+  "name": "context-engineering-stateless-by-default-stateful-by-design",
+  "version": "1.0.0",
+  "description": "Context Engineering: Stateless by Default, Stateful by Design — Giorgio Galassi",
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "author": "Giorgio Galassi",
+  "license": "ISC",
+  "dependencies": {
+    "@slidev/cli": "^52.15.2",
+    "@slidev/theme-default": "^0.25.0"
+  }
+}
