@@ -202,8 +202,14 @@ It was too crowded.
 
 - **<span class="accent">Context confusion</span>** — too many tools or irrelevant definitions cause wrong tool calls
 - **<span class="accent">Context distraction</span>** — accumulated history causes the model to echo noise instead of reason
-- **<span class="accent">Context poisoning</span>** — stale or bad content accumulates and compounds across steps
+- **<span class="accent">Context poisoning</span>** — stale *or hostile* content enters once, then is re-read every session after
 - **<span class="accent">Context clash</span>** — contradictory information produces inconsistent behavior
+
+<div class="callout">
+
+Three of these are hygiene. <span class="accent">Poisoning is a security problem</span> — because the output of agent A is the input of agent B.
+
+</div>
 
 <!--
 Speaker notes:
@@ -229,7 +235,9 @@ look like in practice, with real measurements.
 
 Models don't degrade uniformly. They show a **U-shaped attention curve**: best recall at the start and end of context, worst in the middle.
 
-Relevant information buried under accumulated content can drop accuracy by **<span class="accent">30+ percentage points</span>**.
+Liu et al., **2023**: information buried in the middle dropped accuracy by up to **<span class="accent">30 percentage points</span>** — on that year's models and tasks.
+
+The curve has flattened since. It has not gone away.
 
 ![Lost in the Middle — U-shaped attention curve](/src/lost-in-middle.png)
 
@@ -256,7 +264,9 @@ bounded, structured context is cheaper and more predictable regardless.
 
 Performance doesn't just degrade when context is full. It degrades as it fills — gradually, continuously, long before hitting any limit.
 
-Chroma tested 18 frontier models. <span class="accent">Every single one got worse</span> as input length increased.
+Chroma, **July 2025** — 18 frontier models. <span class="accent">Every single one got worse</span> as input length increased.
+
+The effect is structural. The specific numbers are not.
 
 ![Context Rot — performance degradation across 18 models (Chroma, 2025)](/src/context-rot.png)
 
@@ -272,6 +282,10 @@ the model still produces output. It just produces worse output.
 You don't get an error. You get a subtly wrong answer.
 Context rot is what happens when stale, contradictory, or irrelevant content
 accumulates over time. The context doesn't just get full. It gets noisy.
+Worth knowing for Q&A: the original report was July 2025, and the finding has
+since been reproduced outside question answering — long-horizon search agents
+and classifier monitors show the same curve. It's a property of long inputs,
+not a quirk of one benchmark.
 -->
 
 ---
@@ -305,13 +319,15 @@ This is exactly what the techniques in the next section are designed to prevent.
 
 # Types of memory
 
-| Type               | What it is                                     | Lives where               |
-| ------------------ | ---------------------------------------------- | ------------------------- |
-| Working memory     | Current session state, active task             | Context window            |
-| Episodic memory    | Event logs, session history                    | Experiences / logs        |
-| Semantic memory    | Declarative knowledge, architecture, decisions | Reference documents       |
-| Procedural memory  | Skills, rules, behavioral instructions         | System prompt, rule files |
-| Associative memory | Patterns, preferences, learned behaviors       | Preferences / profiles    |
+| Type               | What it is                                     | Lives where               | Who writes it            |
+| ------------------ | ---------------------------------------------- | ------------------------- | ------------------------ |
+| Working memory     | Current session state, active task             | Context window            | The model, automatically |
+| Episodic memory    | Event logs, session history                    | Experiences / logs        | The runtime, by default  |
+| Semantic memory    | Declarative knowledge, architecture, decisions | Reference documents       | You, deliberately        |
+| Procedural memory  | Skills, rules, behavioral instructions         | System prompt, rule files | You, deliberately        |
+| Associative memory | Patterns, preferences, learned behaviors       | Preferences / profiles    | Accrues from use         |
+
+The column that decides everything is the last one. <span class="accent">The layers worth investing in are the ones nobody writes unless you do.</span>
 
 <!--
 Speaker notes:
@@ -330,6 +346,79 @@ Preferences, patterns, working style. Cross-session, cross-project.
 The techniques we'll cover apply across all five types,
 but the highest leverage is on semantic memory — it's the layer
 that compounds most clearly as a project grows.
+Four of these five persist beyond the session. Only working memory doesn't.
+That split is the next slide.
+-->
+
+---
+
+# Short-term vs long-term memory
+
+| | Short-term (working) | Long-term (persisted) |
+| ---------- | ----------------------------- | ------------------------------------- |
+| Scope | One session | Across sessions, tools, projects |
+| Lives in | The context window | Files, database, memory service |
+| Cost | Tokens on every single turn | Storage, plus a load when you ask |
+| Fails by | Rot, distraction, overflow | Staleness, drift, contradiction |
+| Cleared by | Closing the session | Only by you |
+
+<div class="callout">
+
+The context window is not memory. It's the desk. <span class="accent">Long-term memory is the filing cabinet.</span>
+
+</div>
+
+<!--
+Speaker notes:
+This is the distinction the whole talk rests on, so make it explicit.
+Everything we've discussed so far — rot, lost in the middle, the seven layers —
+is a short-term memory problem. It's about what's on the desk right now.
+Long-term memory is a different problem with different failure modes.
+Short-term memory fails loudly: it fills up, it rots, the session ends.
+Long-term memory fails quietly: it goes stale, it drifts from reality,
+it starts contradicting the code it describes. Nobody notices until
+the agent confidently builds on a decision you reversed two months ago.
+The important beat: you cannot fix a long-term memory problem
+by buying a bigger context window. A bigger desk does not file anything.
+Stateless by default is the short-term reality.
+Stateful by design is the long-term choice.
+-->
+
+---
+
+# The long-term memory lifecycle
+
+Four operations. Most setups implement two.
+
+1. **<span class="accent">Write</span>** — what earns a place? Decisions, conventions, constraints. Not transcripts.
+2. **<span class="accent">Read</span>** — retrieved by index, for a named phase. Not everything, not by default.
+3. **<span class="accent">Update</span>** — two speeds. State is overwritten; decisions are marked `superseded`, never deleted. Drop the *why* and the rejected option comes back in three months.
+4. **<span class="accent">Forget</span>** — expiry and demotion are features. Memory that only grows eventually stops being loadable.
+
+<div class="callout">
+
+Write and read make a memory system look like it works. <span class="accent">Update and forget are what make it trustworthy.</span>
+
+</div>
+
+<!--
+Speaker notes:
+Four operations. Almost everyone builds the first two and stops.
+Write: the hard question isn't how, it's what. The filter is durability.
+Would this still be true in three months? A decision is durable.
+A conversation is not. If you write everything, you've built a log,
+and we already said logs are expensive for agents.
+Read: covered by index-first and phase-based loading. Named file, named phase.
+Update: this is the one people skip, and it's the one that causes damage.
+You changed payment provider. The old note still says Stripe.
+Now the agent has two answers and no way to rank them.
+That's context clash — except it arrives weeks later, from your own memory layer.
+The rule: memory records are overwritten, not versioned. Git has your history.
+Forget: the counterintuitive one. Deleting memory is not losing knowledge.
+Anything you might need again lives on demand, in logs, in git.
+What lives in the default load has to earn that seat every session.
+If nothing ever leaves, the load cost only goes up, and one day
+the memory layer costs more to read than it saves.
 -->
 
 ---
@@ -340,7 +429,8 @@ layout: section
 
 <!--
 Speaker notes:
-Four techniques. Each one solves a specific failure mode.
+Five techniques. Each one solves a specific failure mode.
+The first four are about what goes into the context. The fifth is about what stays out.
 The scenario: a developer resuming work on a feature after closing the session yesterday.
 Simple, universal. No special tooling required.
 We'll see what changes at each step.
@@ -369,6 +459,8 @@ Goal: redesign the checkout flow
 Last session: explored three approaches, settled on progressive disclosure
 Next: stress-test the approach, identify edge cases
 ```
+
+This has a name now: **`AGENTS.md`** — stewarded by the Agentic AI Foundation under the Linux Foundation since December 2025, read natively by 25+ coding agents, used by <span class="accent">60,000+ open-source projects</span>.
 
 <!--
 Speaker notes:
@@ -492,9 +584,12 @@ This is the most tactical of the four techniques.
 It follows directly from phase-based loading but applies at the file level.
 The agent knows what it's working on. It loads what that work requires.
 Not the project. Not the session history. The specific task.
-Combined with the previous three techniques, this closes the loop:
+Combined with the previous three techniques, that's the load path solved:
 the agent loads exactly what it needs, when it needs it,
 at a cost that stays predictable as the project grows.
+But there's a gap left, and it's the one the next technique closes.
+All four of these assume you know what to load. Finding that out
+is itself expensive, and everything you read while searching stays behind.
 
 Q&A preparation — four named failure modes worth knowing cold:
 - Context poisoning: a hallucination or bad tool output enters the context
@@ -506,6 +601,56 @@ Q&A preparation — four named failure modes worth knowing cold:
 - Context clash: new information contradicts something already in context,
   producing inconsistent behavior. Fixed by establishing a clear authority order:
   system prompt > retrieved facts > conversation history.
+-->
+
+---
+
+# 5. Sub-agent isolation
+
+<div class="callout">
+
+**Prevents:** context pollution — the search for the answer costing more than the answer.
+
+</div>
+
+**The problem:** To find one file, the agent reads twenty.
+Nineteen of them stay in the window for the rest of the session.
+
+**The technique:** Run the dirty work — exploration, log triage, wide search —
+in a separate context. Only the conclusion comes back.
+
+```
+Sub-agent reads:      20 files, ~40k tokens
+Returns:              "Session handling: src/auth/session.ts:40, JWT + refresh"
+Main context pays:    one line
+```
+
+Write · Select · Compress · <span class="accent">Isolate</span> — the four canonical context operations.
+Techniques 1&ndash;4 cover the first three.
+
+<!--
+Speaker notes:
+This is the technique people discover last and miss most.
+The other four are about what you put in. This one is about what you keep out.
+Start with the problem, because everyone has lived it.
+You ask where session handling lives. The agent greps, opens a file,
+wrong one, opens another, reads a config, follows an import.
+Twenty files later it tells you the answer — and nineteen of those files
+are now sitting in your context window, permanently, for a question
+that was answered in one line.
+That's not a retrieval failure. The retrieval worked. The cost is the residue.
+The fix is to give the search its own window. The sub-agent burns forty
+thousand tokens finding the answer, and the only thing that crosses
+back into your session is the sentence you actually asked for.
+The trade is real and worth naming: the sub-agent doesn't have your context,
+so it can't use what you already established. You pay for isolation
+in re-explanation. For wide, dirty, throwaway work, that trade is almost always good.
+For work that needs the thread of the conversation, it isn't.
+Then the closing line. The field has settled on four operations:
+write, select, compress, isolate. Techniques one through four
+were write, select and compress. This is the fourth.
+If someone asks what to adopt first — it's this one, because it's the only
+technique that gets cheaper as the project gets bigger.
 -->
 
 ---
@@ -625,6 +770,113 @@ They load when you ask for them. The default load stays small and fast.
 -->
 
 ---
+
+# How do you know your context is working?
+
+You'll notice the symptoms before you notice any metric:
+
+- The agent re-asks something you already answered
+- It contradicts a decision from the same session
+- It reaches for the wrong tool
+- Answers get vaguer the longer the session runs
+
+**Three numbers worth watching:**
+
+- <span class="accent">Orientation cost</span> — tokens loaded before any work starts
+- <span class="accent">Utilization</span> — how much of the loaded context the task actually touched
+- <span class="accent">Useful turns</span> — how many turns before quality visibly drops
+
+<!--
+Speaker notes:
+People ask "is my context engineering working?" and expect a dashboard.
+Start with the honest answer: you'll feel it before you measure it.
+Those four symptoms map one-to-one onto the failure modes from earlier.
+Re-asking is a memory problem. Contradiction is clash.
+Wrong tool is confusion. Vagueness over time is rot and distraction.
+If you're seeing these, the diagnosis is already in the room.
+Then the three numbers. None of them need infrastructure.
+Orientation cost: what does it cost to start? If your first turn is 40k tokens,
+you've spent a fifth of a 200k window before the agent has done anything.
+Utilization: of everything you loaded, how much did the task actually use?
+Low utilization means you're paying rent on context you didn't need.
+Useful turns: at what point does quality drop? That number is your session budget.
+When you know it, you stop being surprised by it — you compact before you hit it.
+-->
+
+---
+
+# Test your context like you test your code
+
+<div class="callout">
+
+**The golden set:** ten to twenty questions that <span class="accent">only your memory layer can answer.</span>
+
+</div>
+
+```md
+Which payment provider did we choose, and what did we reject?
+What is the naming convention for API route handlers?
+Where did the last session stop, and why?
+```
+
+Ask them at the start of a session, from cold.
+If the agent can't answer from what it loaded, the memory layer failed — not the model.
+
+- **Block on regression, not on score** — compare against the last known-good run
+- **Ablate** — remove a file, halve the tools: does anything actually get worse?
+- **Automate** — promptfoo or DeepEval can score the same set in CI on every change to your rule files
+
+<!--
+Speaker notes:
+This is the part almost nobody does, and it's the cheapest thing in the talk.
+The golden set is just questions with known answers that live in your memory layer.
+Write ten. Twenty is plenty. Keep them in a file next to the memory itself.
+The test is: open a cold session, load what you normally load, ask the questions.
+The framing matters — if the answer isn't there, that's not a model failure.
+You never gave it the information. That's a context bug, and context bugs are fixable.
+Block on regression, not absolute score: LLM outputs are non-deterministic,
+so an absolute pass threshold gives you flaky tests and lost trust.
+Score today against the last good run and fail on the delta instead.
+Ablation is the underrated one, and it's how you find waste.
+Delete a file from the default load and re-run. Nothing got worse?
+It was never earning its seat. Same with tools — remember 46 versus 19.
+Ablation is how you discover which half of your context was decoration.
+And if your rules live in files — CLAUDE.md, rule files, an index —
+those files are code. They change behavior. They deserve the same gate
+as anything else you'd never merge untested.
+-->
+
+---
+
+# How the field measures memory
+
+| Benchmark       | What it tests                                           | Scale                        |
+| --------------- | ------------------------------------------------------- | ---------------------------- |
+| LoCoMo          | Multi-session conversational recall                     | 50 conversations, ~300 turns |
+| LongMemEval     | Knowledge updates, temporal reasoning, multi-session     | 500 questions, 6 categories  |
+| BEAM            | Memory behavior at production volume                     | 1M and 10M tokens            |
+
+The benchmark everyone quotes — needle in a haystack — is the one that <span class="accent">most overstates</span> how healthy long context is.
+
+<!--
+Speaker notes:
+Brief slide. This is for the people who want to go read something after.
+Three benchmarks define the memory conversation right now.
+LoCoMo is the most widely reported number across memory systems:
+fifty long multi-session conversations, roughly three hundred turns each.
+LongMemEval is the more demanding one — five hundred questions,
+and critically it tests knowledge updates: what happens when a fact changes.
+That's the update operation from two slides ago, measured.
+BEAM is the production-scale one, at one and ten million tokens.
+The point of BEAM is that you cannot solve it by buying a bigger window.
+And the honesty note at the bottom: needle in a haystack is the benchmark
+everyone cites and models score well on it, which is exactly why
+long context looks more solved than it is. NIAH measures lexical retrieval.
+Real tasks need reasoning across what was retrieved. Those are not the same test.
+If someone in Q&A cites a big NIAH number, that's the answer.
+-->
+
+---
 layout: section
 ---
 
@@ -689,13 +941,16 @@ That's the architecture. The discipline we covered is what makes the memory laye
 
 ---
 
-# Three approaches the industry is exploring
+# Four approaches, by what they treat memory as
 
-| Approach             | Cross-tool?                       | Example                           |
-| -------------------- | --------------------------------- | --------------------------------- |
-| Managed memory layer | Yes, via cloud API                | Mem0, OpenMemory, Cloudflare      |
-| Shared MCP server    | Yes, any MCP-compatible tool      | agentmemory, MemNexus             |
-| Filesystem-native    | Single tool, or manual discipline | Plain markdown, no infrastructure |
+| Approach                  | Memory is...                          | Example                  | Lock-in            |
+| ------------------------- | ------------------------------------- | ------------------------ | ------------------ |
+| Managed memory API        | Extracted facts, indexed for you      | Mem0, Supermemory        | The vendor's store |
+| Temporal knowledge graph  | Facts with a *valid from* / *until*   | Zep / Graphiti           | Graph schema + DB  |
+| Memory-first agent runtime| The agent's own editable state        | Letta (ex-MemGPT), Cognee| The whole runtime  |
+| Filesystem-native         | A file                                | AGENTS.md + markdown     | None. It's a repo  |
+
+Only one of these answers the staleness problem from two slides ago by design: <span class="accent">the temporal graph knows *when* a fact was true.</span>
 
 <div class="callout">
 
@@ -705,23 +960,108 @@ _The discipline is the same. The write layer is a choice._
 
 <!--
 Speaker notes:
-Important honesty point here.
-The filesystem-native approach works cleanly for a single developer
-using one tool at a time. The files are portable — you can open them
-in any tool, any editor, any runtime.
-But cross-tool writes require a shared write layer.
-If you want Claude Code and Cursor and a local model to all write
-to the same memory layer automatically, you need something in the middle.
-That's where MCP comes in: a shared MCP server exposes the same write APIs
-to every tool that supports MCP. The tools don't talk to each other.
-They talk to the same memory layer through the same interface.
-This is not experimental. Mem0 crossed 41,000 GitHub stars.
-Cloudflare shipped Agent Memory in private beta in April 2026.
-The managed approach trades control for convenience.
-The MCP approach trades setup cost for cross-tool compatibility.
-The filesystem approach trades automation for simplicity and resilience.
-None of them work without the context engineering discipline underneath.
+The useful way to read this table is not by how it's deployed —
+cloud, self-hosted, local — because that's a vendor question.
+Read it by what each one thinks memory actually is. That's the design question.
+Row one, managed memory API: memory is facts, extracted from your conversations
+and indexed for you. Mem0 is the most adopted of these. You get a drop-in
+write and read API and you stop thinking about storage. The trade is
+that the extraction policy is theirs, and the store is theirs.
+Row two, temporal knowledge graph. This is the one worth slowing down on,
+because it's the direct answer to the staleness problem from earlier.
+Zep and Graphiti store facts as a graph with validity intervals —
+not just "we use Stripe" but "we used Stripe, from March until September."
+Every other approach on this slide overwrites the old fact or leaves it to rot.
+This one knows when it was true, and that's a genuinely different capability.
+The cost is a real graph, a real database, and an LLM pass on every write.
+Row three, memory-first runtime: memory isn't a service you call,
+it's the agent's own state, which the agent edits itself. Letta — formerly
+MemGPT — is the reference implementation. The strongest version of the idea,
+and also the biggest commitment: you're not adopting a memory layer,
+you're adopting the runtime that runs your agent.
+Row four: memory is a file. No extraction, no schema, no service.
+And this is the honesty point — fourteen months ago this was the weakest row
+on the slide, the one for people who didn't want infrastructure.
+It isn't anymore. AGENTS.md made plain markdown the most portable option here,
+not the least, because every tool can read it and nothing owns it.
+Then the lock-in column, which is the whole reason the slide exists.
+Read it top to bottom: the vendor's store, a graph schema, an entire runtime, nothing.
+That's not an argument for the bottom row. It's an argument for knowing
+which one you signed up for. All four work. None of them work
+without the context engineering discipline underneath.
 The infrastructure is a choice. The discipline is not optional.
+-->
+
+---
+
+# Fourteen months
+
+| | Mid-2025 | Now |
+| ------------------ | ------------------------------------- | --------------------------------------------------- |
+| The long-context fix | "Wait for a bigger window" | 1M windows shipped — they still sag before 100k |
+| Tool definitions | Full manifest, every turn, forever | Deferred loading: one case went 150k → 2k tokens |
+| Trimming context | You did it by hand, between sessions | The agent edits its own context, mid-session |
+| Agent memory | Markdown files and personal discipline | Managed memory layers with per-write audit logs |
+| The scary attack | Prompt injection — gone when you close the tab | Memory poisoning — it waits for you in tomorrow's session |
+
+<!--
+Speaker notes:
+This slide exists to make one point: the ground moved under this talk while I was writing it.
+Fourteen months. Roughly the distance between the Chroma context rot report
+and this room.
+Go row by row, fast, don't linger.
+Row one: the honest answer in 2025 was "the window will get bigger."
+It did. A million tokens. And measurement still shows the sag starting
+well before a hundred thousand. Bigger windows moved the middle. They didn't remove it.
+Row two: the tool manifest tax I mentioned earlier was just the cost of doing business.
+Now tool definitions can load on demand. The reported numbers are not incremental —
+one published case went from a hundred and fifty thousand tokens to two thousand.
+Row three: compaction used to be homework you did between sessions.
+Now the agent can clear its own stale tool results while it works.
+Row four: memory was a folder of markdown files and the discipline to maintain it.
+Now there are managed memory layers, with audit logs on every write.
+Row five is the one to slow down on. In 2025 the attack you worried about
+was prompt injection, and it died when the session ended.
+Now the attack writes itself into your memory layer and waits.
+That's the new shape of the problem: persistence cuts both ways.
+Then the turn: so if everything on this slide changed in fourteen months,
+what was worth learning?
+-->
+
+---
+
+# What didn't change
+
+Every row on that slide was an <span class="accent">implementation</span> moving.
+
+The questions underneath stayed exactly where they were:
+
+- What does the agent need to know right now?
+- What has to survive the session ending?
+- What earns its seat in the default load?
+- Who is allowed to write to what the agent believes?
+
+<div class="callout">
+
+The tools got a year better. <span class="accent">The decisions are still yours.</span>
+
+</div>
+
+<!--
+Speaker notes:
+This is the payoff for the previous slide, and it's the thesis of the talk.
+Every single thing that changed was an implementation detail.
+Better windows, cheaper tools, self-editing context, managed memory.
+Not one of them answered a question on this list.
+A million-token window doesn't tell you what belongs in it.
+A managed memory service doesn't tell you what's worth remembering.
+Audit logs don't tell you who should be trusted to write.
+These four questions were the job in 2025 and they're the job now.
+That's why I'd bet on learning the discipline over learning any tool:
+the tool you learn today has a half-life measured in months.
+The questions don't.
+If someone asks "won't this all be automated soon" — this is the answer.
+The automation keeps arriving. It keeps not deciding what your agent should know.
 -->
 
 ---
