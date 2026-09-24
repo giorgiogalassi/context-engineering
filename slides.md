@@ -453,11 +453,13 @@ What project is this? What was the last decision? Where did you leave off?
 that answers those questions. A dispatch table, not a document.
 
 ```md
-## Active project: payments-refactor
+# AGENTS.md — payments-refactor
 
-Goal: redesign the checkout flow
-Last session: explored three approaches, settled on progressive disclosure
-Next: stress-test the approach, identify edge cases
+- Current state → `docs/state.md` (read first)
+- Architecture → `docs/architecture.md`
+- Specs → `docs/specs/` (one file per feature)
+- Payment providers → `docs/notes/stripe-integration.md`
+- Conventions → `docs/conventions.md`
 ```
 
 This has a name now: **`AGENTS.md`** — stewarded by the Agentic AI Foundation under the Linux Foundation since December 2025, read natively by 25+ coding agents, used by <span class="accent">60,000+ open-source projects</span>.
@@ -466,10 +468,14 @@ This has a name now: **`AGENTS.md`** — stewarded by the Agentic AI Foundation 
 Speaker notes:
 The key insight here is the word "dispatch table."
 This file does not contain the knowledge. It points to where the knowledge is.
-INDEX.md in a filesystem, a project manifest, a status file — the format doesn't matter.
+INDEX.md in a filesystem, a project manifest, a README-style map — the format doesn't matter.
 What matters is that it's small, always current, and always the first thing loaded.
 The cost of orientation drops from "re-read everything" to "read one file."
 The developer resumes instantly. No re-explanation needed.
+
+CLAUDE.md and AGENTS.md are a special case of this file: the main agent reads them
+automatically at session start. No instruction needed, no tool call. They're already in context.
+That's exactly why they should stay an index — small, pointing elsewhere — not a knowledge dump.
 
 Bonus connection: this technique also maximizes prompt cache hits.
 Stable content loaded first means the cache prefix stays consistent across sessions.
