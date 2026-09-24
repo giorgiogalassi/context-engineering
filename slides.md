@@ -498,6 +498,9 @@ Transcripts are noisy, long, and expensive to load.
 **The technique:** Summarize into a structured state document.
 <span class="accent">Overwrite it every session. Never append.</span>
 
+<div class="grid grid-cols-[1.45fr_1fr] gap-6 items-center">
+<div>
+
 ```md
 ## Goal
 
@@ -513,6 +516,14 @@ Redesign checkout flow to reduce drop-off at payment step.
 
 - Payment provider: Stripe vs Braintree undecided
 ```
+
+</div>
+<div>
+
+<ChartAppendVsOverwrite />
+
+</div>
+</div>
 
 <!--
 Speaker notes:
@@ -543,11 +554,22 @@ Loading everything upfront wastes context window space.
 **The technique:** Load in phases. Each phase loads only
 what the current step requires.
 
+<div class="grid grid-cols-2 gap-6 items-center">
+<div>
+
 | Phase          | What loads                          |
 | -------------- | ----------------------------------- |
 | Orientation    | Index file + state document         |
 | Task           | Relevant specs + architecture notes |
 | Implementation | Specific files being modified       |
+
+</div>
+<div>
+
+<ChartPhaseLoading />
+
+</div>
+</div>
 
 <!--
 Speaker notes:
@@ -619,11 +641,22 @@ Q&A preparation — four named failure modes worth knowing cold:
 
 </div>
 
+<div class="grid grid-cols-2 gap-6 items-center">
+<div>
+
 **The problem:** To find one file, the agent reads twenty.
 Nineteen of them stay in the window for the rest of the session.
 
 **The technique:** Run the dirty work — exploration, log triage, wide search —
 in a separate context. Only the conclusion comes back.
+
+</div>
+<div>
+
+<ChartSubAgentResidue />
+
+</div>
+</div>
 
 ```
 Sub-agent reads:      20 files, ~40k tokens
