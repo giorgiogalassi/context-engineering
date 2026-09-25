@@ -152,8 +152,7 @@ Finite: every model has a hard token limit. You can't add more RAM.
 Resets: every new session starts empty. Nothing carries over by default.
 Degrades: this is the subtle one. It's not just that context runs out.
 Performance degrades continuously as context fills, even well below the limit.
-A model with a 200k token window may start showing degradation at 50k tokens.
-The decline is a gradient, not a cliff.
+Don't give numbers yet — the evidence is a few slides away.
 This is why context engineering matters. You're not just managing space.
 You're managing attention.
 -->
@@ -189,11 +188,7 @@ One specific beat worth hitting:
 Tool definitions alone, if you have many MCP servers connected,
 can consume thousands of tokens before any work has started.
 That's the cost you pay on every single turn, for tools you may never use.
-Researchers call this context confusion: too many tool definitions cause the model
-to call the wrong tools or produce lower quality outputs.
-One study found a model failed completely with 46 tools available,
-and worked fine when trimmed to 19. The context wasn't too long.
-It was too crowded.
+Hold the rest: that failure has a name, and it's the first one on the next slide.
 -->
 
 ---
@@ -225,8 +220,8 @@ Context poisoning: stale decisions, outdated architecture notes, superseded requ
 all sitting in context alongside current work. The agent builds on bad foundations.
 Context clash: the system prompt says one thing, a retrieved document says another.
 The agent can't reconcile it and produces inconsistent output.
-The next two slides show what context distraction and context poisoning
-look like in practice, with real measurements.
+The next two slides show what degradation looks like in practice,
+with real measurements.
 -->
 
 ---
@@ -253,7 +248,7 @@ and then accumulates 50 tool calls worth of output. Those original instructions
 are now buried in the middle. They effectively disappear.
 This is why index-first loading matters: critical orientation information
 always stays at the top, not buried under accumulated noise.
-Nuance worth knowing for Q&A: frontier models like Gemini 2.5 Flash are
+Nuance worth knowing for Q&A: newer frontier models are
 improving on this. Frame it as a design principle, not an unsolved crisis:
 bounded, structured context is cheaper and more predictable regardless.
 -->
@@ -262,13 +257,24 @@ bounded, structured context is cheaper and more predictable regardless.
 
 # Context rot
 
-Performance doesn't just degrade when context is full. It degrades as it fills — gradually, continuously, long before hitting any limit.
+Performance doesn't just degrade when context is full. It degrades as it fills — long before hitting any limit.
+
+<div class="grid grid-cols-2 gap-4">
+<div>
 
 Chroma, **July 2025** — 18 frontier models. <span class="accent">Every single one got worse</span> as input length increased.
 
-The effect is structural. The specific numbers are not.
-
 ![Context Rot — performance degradation across 18 models (Chroma, 2025)](/src/context-rot.png)
+
+</div>
+<div>
+
+Same question, same answer in context — <span class="accent">300 tokens</span> vs <span class="accent">113,000</span>.
+
+![LongMemEval — focused vs full context performance gap (Chroma, 2025)](/src/context-rot-longmemeval.png)
+
+</div>
+</div>
 
 <!--
 Speaker notes:
@@ -280,39 +286,25 @@ A model with a 200k token window may show meaningful degradation at 50k tokens.
 The decline is a gradient, not a cliff. Which makes it insidious:
 the model still produces output. It just produces worse output.
 You don't get an error. You get a subtly wrong answer.
-Context rot is what happens when stale, contradictory, or irrelevant content
-accumulates over time. The context doesn't just get full. It gets noisy.
-Worth knowing for Q&A: the original report was July 2025, and the finding has
-since been reproduced outside question answering — long-horizon search agents
-and classifier monitors show the same curve. It's a property of long inputs,
-not a quirk of one benchmark.
--->
 
----
-
-# Context rot — the cost of irrelevant content
-
-Same question. Same model. Same answer exists in the context.
-
-The only difference: one prompt is <span class="accent">300 tokens</span>. The other is <span class="accent">113,000</span>.
-
-![LongMemEval — focused vs full context performance gap (Chroma, 2025)](/src/context-rot-longmemeval.png)
-
-<!--
-Speaker notes:
-This is the LongMemEval experiment. Models were given the same questions twice.
+The chart is the sharpest version of that: the LongMemEval experiment.
+Models were given the same questions twice.
 Once with a focused prompt of ~300 tokens: only the relevant conversation.
 Once with the full prompt of ~113k tokens: the entire chat history.
-The bars show the performance gap.
 The model knew the answer. It just couldn't find it reliably in the noise.
 For Claude specifically the gap is dramatic: Sonnet 4 and Opus 4 are so
 conservative under ambiguity that they often abstain entirely rather than guess.
 They score lower not because they hallucinate but because they refuse to commit
 when they can't locate the answer cleanly in 113k tokens of context.
-This is context rot made concrete: not a theoretical degradation curve,
-but a real performance gap on real questions with real answers present.
+The effect is structural. The specific numbers are not.
 Left unmanaged, context doesn't just fill up. It rots.
-This is exactly what the techniques in the next section are designed to prevent.
+
+Worth knowing for Q&A: the original report was July 2025, and the finding has
+since been reproduced outside question answering — long-horizon search agents
+and classifier monitors show the same curve. It's a property of long inputs,
+not a quirk of one benchmark. And million-token windows haven't fixed it:
+they still sag well before a hundred thousand. Bigger windows move the middle.
+They don't remove it.
 -->
 
 ---
@@ -413,7 +405,9 @@ Update: this is the one people skip, and it's the one that causes damage.
 You changed payment provider. The old note still says Stripe.
 Now the agent has two answers and no way to rank them.
 That's context clash — except it arrives weeks later, from your own memory layer.
-The rule: memory records are overwritten, not versioned. Git has your history.
+The rule has two speeds. State is overwritten — git has its history.
+Decisions are marked superseded, with a date, and stay loadable:
+drop the why, and the option you rejected comes back in three months.
 Forget: the counterintuitive one. Deleting memory is not losing knowledge.
 Anything you might need again lives on demand, in logs, in git.
 What lives in the default load has to earn that seat every session.
@@ -429,8 +423,14 @@ layout: section
 
 <!--
 Speaker notes:
-Five techniques. Each one solves a specific failure mode.
-The first four are about what goes into the context. The fifth is about what stays out.
+Four techniques. Each one is aimed at a failure mode we've already named:
+1. Index-first loading — lost in the middle: orientation always sits at the top.
+2. Anchored summarization — context rot: a bounded state doc instead of a transcript.
+3. Phase-based, just-in-time loading — distraction and confusion: history and tools load only when a step needs them.
+4. Sub-agent isolation — the residue of search.
+The other two, clash and poisoning, are memory problems.
+They're answered by the lifecycle's update rule and by the write discipline in the decision space.
+The first three are about what goes into the context. The fourth is about what stays out.
 The scenario: a developer resuming work on a feature after closing the session yesterday.
 Simple, universal. No special tooling required.
 We'll see what changes at each step.
@@ -442,7 +442,7 @@ We'll see what changes at each step.
 
 <div class="callout">
 
-**Prevents:** cold start confusion — the agent doesn't know where it is or what it's doing.
+**Prevents:** cold start — the agent doesn't know where it is or what it's doing.
 
 </div>
 
@@ -462,7 +462,7 @@ that answers those questions. A dispatch table, not a document.
 - Conventions → `docs/conventions.md`
 ```
 
-This has a name now: **`AGENTS.md`** — stewarded by the Agentic AI Foundation under the Linux Foundation since December 2025, read natively by 25+ coding agents, used by <span class="accent">60,000+ open-source projects</span>.
+This has a name now: **`AGENTS.md`** — stewarded by the Agentic AI Foundation under the Linux Foundation since December 2025, read natively by 20+ coding agents, used by <span class="accent">60,000+ open-source projects</span>.
 
 <!--
 Speaker notes:
@@ -540,19 +540,18 @@ Structured, dense, loadable in seconds.
 
 ---
 
-# 3. Phase-based context loading
+# 3. Phase-based, just-in-time loading
 
 <div class="callout">
 
-**Prevents:** context distraction — the agent over-relies on irrelevant history instead of reasoning clearly.
+**Prevents:** context distraction and confusion — history, files and tools the current step never needs.
 
 </div>
 
 **The problem:** The agent doesn't need everything at once.
 Loading everything upfront wastes context window space.
 
-**The technique:** Load in phases. Each phase loads only
-what the current step requires.
+**The technique:** Load in phases. Within a phase, load files — and tool definitions — the moment they're needed. Everything else stays on disk.
 
 <div class="grid grid-cols-2 gap-6 items-center">
 <div>
@@ -582,46 +581,27 @@ The developer's session starts with orientation only.
 Once the agent knows what it's doing, it loads the relevant specs.
 Only when writing code does it load the specific files being modified.
 Three phases. Three cost levels. No waste.
--->
 
----
+Just-in-time is the same rule at the file level. Concrete example:
+implementing checkout/PaymentStep.tsx loads architecture.md, the PaymentStep spec
+and the stripe-integration notes. It does not load the session history,
+unrelated modules, or past decisions.
+And the same rule applies to tools: the 46-versus-19 result is a selection problem.
+Tool definitions that load when a step needs them are the fix for context confusion.
+The numbers are not incremental: Anthropic's "Code execution with MCP" post
+(November 2025) exposed tools as code the agent discovers when needed,
+and one Google Drive to Salesforce task went from 150k tokens to 2k.
 
-# 4. Just-in-time file retrieval
-
-<div class="callout">
-
-**Prevents:** context bloat — paying the token cost of files the current task never needs.
-
-</div>
-
-**The problem:** When implementing one module, the agent doesn't need
-the entire project history or every architecture document.
-
-**The technique:** Load files at the moment they're needed,
-not before. Everything else stays on disk.
-
-```
-Implementing: checkout/PaymentStep.tsx
-Loads: architecture.md, PaymentStep spec, stripe-integration notes
-Does not load: full session history, unrelated modules, past decisions
-```
-
-<!--
-Speaker notes:
-This is the most tactical of the four techniques.
-It follows directly from phase-based loading but applies at the file level.
-The agent knows what it's working on. It loads what that work requires.
-Not the project. Not the session history. The specific task.
-Combined with the previous three techniques, that's the load path solved:
-the agent loads exactly what it needs, when it needs it,
+That's the load path solved: the agent loads exactly what it needs, when it needs it,
 at a cost that stays predictable as the project grows.
 But there's a gap left, and it's the one the next technique closes.
-All four of these assume you know what to load. Finding that out
+All three of these assume you know what to load. Finding that out
 is itself expensive, and everything you read while searching stays behind.
 
 Q&A preparation — four named failure modes worth knowing cold:
 - Context poisoning: a hallucination or bad tool output enters the context
-  and gets compounded over subsequent steps. Fixed by pruning and validation.
+  and gets compounded over subsequent steps. Fixed by pruning, validation,
+  and reviewing what gets written to memory.
 - Context distraction: context grows so long the model over-relies on recent
   history and stops reasoning from first principles. Fixed by compression.
 - Context confusion: too many tools or irrelevant content causes the model
@@ -633,7 +613,7 @@ Q&A preparation — four named failure modes worth knowing cold:
 
 ---
 
-# 5. Sub-agent isolation
+# 4. Sub-agent isolation
 
 <div class="callout">
 
@@ -665,12 +645,12 @@ Main context pays:    one line
 ```
 
 Write · Select · Compress · <span class="accent">Isolate</span> — the four canonical context operations.
-Techniques 1&ndash;4 cover the first three.
+Techniques 1&ndash;3 cover the first three.
 
 <!--
 Speaker notes:
 This is the technique people discover last and miss most.
-The other four are about what you put in. This one is about what you keep out.
+The other three are about what you put in. This one is about what you keep out.
 Start with the problem, because everyone has lived it.
 You ask where session handling lives. The agent greps, opens a file,
 wrong one, opens another, reads a config, follows an import.
@@ -686,10 +666,10 @@ so it can't use what you already established. You pay for isolation
 in re-explanation. For wide, dirty, throwaway work, that trade is almost always good.
 For work that needs the thread of the conversation, it isn't.
 Then the closing line. The field has settled on four operations:
-write, select, compress, isolate. Techniques one through four
+write, select, compress, isolate. Techniques one through three
 were write, select and compress. This is the fourth.
 If someone asks what to adopt first — it's this one, because it's the only
-technique that gets cheaper as the project gets bigger.
+technique whose savings grow as the project gets bigger.
 -->
 
 ---
@@ -712,11 +692,17 @@ They're the decisions you'll face regardless of how you build this.
 
 Three options. Each with a different tradeoff.
 
-| Location        | Benefit                           | Cost                                                |
-| --------------- | --------------------------------- | --------------------------------------------------- |
-| Inside the tool | Zero setup                        | Locked to one tool                                  |
-| Inside the repo | Version controlled                | Pollutes git history, couples knowledge to codebase |
-| Outside both    | Tool-agnostic, survives archiving | Requires discipline to maintain                     |
+| Location        | Benefit                                      | Cost                                       |
+| --------------- | -------------------------------------------- | ------------------------------------------ |
+| Inside the tool | Zero setup                                   | Locked to one tool                         |
+| Inside the repo | Versioned, reviewed, read by every tool      | Only fits project knowledge                |
+| Outside both    | Crosses projects, survives archiving         | Requires discipline to maintain            |
+
+<div class="callout">
+
+Project memory goes in the repo. <span class="accent">Memory about you goes outside it.</span>
+
+</div>
 
 <!--
 Speaker notes:
@@ -725,14 +711,16 @@ Inside the tool: easiest to start, hardest to escape.
 Your memory is now owned by the vendor. Switch tools, lose memory.
 Cursor Memories, for example, are deliberately per-project.
 When you switch to Claude Code or a local model, they don't come with you.
-Inside the repo: feels natural, version controlled, reviewable.
-But your architectural decisions end up in git alongside your source code.
-And when you archive the repo, the knowledge goes with it.
-Outside both: the hardest to set up, the most resilient long-term.
-Your knowledge layer is independent of any tool, any repo, any vendor.
-It lives as long as you maintain it.
-There's no universally right answer. But the tradeoffs are clear.
-Know which one you're choosing and why.
+Inside the repo: this row aged the best. With AGENTS.md, the repo is where
+project memory belongs — versioned, reviewed in the same PR as the code,
+and read natively by every major coding agent. Switch tools, keep memory.
+The limit is scope: the repo only knows about the repo.
+Outside both: the hardest to set up, and the only one that crosses projects.
+Your preferences, your working style, the decision you made on project A
+that should inform project B — none of that belongs in any single repo.
+This is the answer to cross-project blindness from the opening.
+So it's not one choice, it's a split by scope:
+project knowledge in the repo, knowledge about you outside it.
 -->
 
 ---
@@ -789,11 +777,12 @@ Memory that grows without constraint becomes:
 - Too noisy to be useful
 - Too stale to be trusted
 
-**Three disciplines:**
+**Four disciplines:**
 
 1. Overwrite state, never append
 2. Cap reference documents at a fixed line count
 3. Load experiences on demand, never by default
+4. <span class="accent">Nothing enters memory without a date, a source, and a review</span>
 
 <!--
 Speaker notes:
@@ -806,6 +795,14 @@ If it can grow forever, it will. And eventually it will cost more than it's wort
 The third point is subtle but important: session logs, experience entries,
 historical decisions — these are valuable. But they should never load by default.
 They load when you ask for them. The default load stays small and fast.
+The fourth is the one on the write path, and it's the defense against poisoning.
+A date lets you expire a fact. A source lets you debug it.
+And a review — the same diff you'd read before merging code — means
+agent output never becomes agent belief without a human in between.
+Remember: the output of agent A is the input of agent B.
+Prompt injection used to die when you closed the tab.
+Memory poisoning waits for you in tomorrow's session.
+Memory files are code. Merge them like code.
 -->
 
 ---
@@ -905,7 +902,7 @@ LoCoMo is the most widely reported number across memory systems:
 fifty long multi-session conversations, roughly three hundred turns each.
 LongMemEval is the more demanding one — five hundred questions,
 and critically it tests knowledge updates: what happens when a fact changes.
-That's the update operation from two slides ago, measured.
+That's the update operation from the lifecycle slide, measured.
 BEAM is the production-scale one, at one and ten million tokens.
 The point of BEAM is that you cannot solve it by buying a bigger window.
 And the honesty note at the bottom: needle in a haystack is the benchmark
@@ -951,15 +948,7 @@ The same discipline, applied further.
 
 - A team sharing context across sessions and members
 - Multiple tools reading the same memory layer: Claude Code, Cursor, a local model
-- A shared write layer — an MCP server all tools call to write the same vault
-
-<!--
-The last point is not optional for cross-tool scenarios.
-Tools don't share files automatically.
-If you want Claude Code and Cursor and a local model to write
-to the same memory layer, you need a shared interface.
-MCP is that interface. Not a nice-to-have. The required piece.
--->
+- A shared write layer — for memory outside the repo, an MCP server every tool writes through
 
 <!--
 Speaker notes:
@@ -970,9 +959,11 @@ Cross-project blindness: the architectural decision made on project A never reac
 The context engineering discipline is the same at every scale.
 What changes is the write layer.
 
-On the MCP point:
-MCP as a write layer is now standard practice, not experimental.
-Mem0, agentmemory, OpenMemory — these projects all use MCP as the interface
+On the MCP point — be precise about when you need it.
+Project memory in the repo needs no service: every tool already reads AGENTS.md.
+Memory that lives outside the repo is different. Tools don't share
+a folder on your laptop, so they need a shared interface to write to it.
+That's where MCP comes in: Mem0's OpenMemory and Zep's Graphiti both ship MCP servers
 through which different tools write to a shared memory layer.
 The tools don't talk to each other. They talk to the same memory layer.
 That's the architecture. The discipline we covered is what makes the memory layer useful.
@@ -989,7 +980,7 @@ That's the architecture. The discipline we covered is what makes the memory laye
 | Memory-first agent runtime| The agent's own editable state        | Letta (ex-MemGPT), Cognee| The whole runtime  |
 | Filesystem-native         | A file                                | AGENTS.md + markdown     | None. It's a repo  |
 
-Only one of these answers the staleness problem from two slides ago by design: <span class="accent">the temporal graph knows *when* a fact was true.</span>
+Only one of these answers the staleness problem by design: <span class="accent">the temporal graph knows *when* a fact was true.</span>
 
 <div class="callout">
 
@@ -1019,7 +1010,7 @@ MemGPT — is the reference implementation. The strongest version of the idea,
 and also the biggest commitment: you're not adopting a memory layer,
 you're adopting the runtime that runs your agent.
 Row four: memory is a file. No extraction, no schema, no service.
-And this is the honesty point — fourteen months ago this was the weakest row
+And this is the honesty point — a year ago this was the weakest row
 on the slide, the one for people who didn't want infrastructure.
 It isn't anymore. AGENTS.md made plain markdown the most portable option here,
 not the least, because every tool can read it and nothing owns it.
@@ -1033,45 +1024,10 @@ The infrastructure is a choice. The discipline is not optional.
 
 ---
 
-# Fourteen months
-
-| | Mid-2025 | Now |
-| ------------------ | ------------------------------------- | --------------------------------------------------- |
-| The long-context fix | "Wait for a bigger window" | 1M windows shipped — they still sag before 100k |
-| Tool definitions | Full manifest, every turn, forever | Deferred loading: one case went 150k → 2k tokens |
-| Trimming context | You did it by hand, between sessions | The agent edits its own context, mid-session |
-| Agent memory | Markdown files and personal discipline | Managed memory layers with per-write audit logs |
-| The scary attack | Prompt injection — gone when you close the tab | Memory poisoning — it waits for you in tomorrow's session |
-
-<!--
-Speaker notes:
-This slide exists to make one point: the ground moved under this talk while I was writing it.
-Fourteen months. Roughly the distance between the Chroma context rot report
-and this room.
-Go row by row, fast, don't linger.
-Row one: the honest answer in 2025 was "the window will get bigger."
-It did. A million tokens. And measurement still shows the sag starting
-well before a hundred thousand. Bigger windows moved the middle. They didn't remove it.
-Row two: the tool manifest tax I mentioned earlier was just the cost of doing business.
-Now tool definitions can load on demand. The reported numbers are not incremental —
-one published case went from a hundred and fifty thousand tokens to two thousand.
-Row three: compaction used to be homework you did between sessions.
-Now the agent can clear its own stale tool results while it works.
-Row four: memory was a folder of markdown files and the discipline to maintain it.
-Now there are managed memory layers, with audit logs on every write.
-Row five is the one to slow down on. In 2025 the attack you worried about
-was prompt injection, and it died when the session ended.
-Now the attack writes itself into your memory layer and waits.
-That's the new shape of the problem: persistence cuts both ways.
-Then the turn: so if everything on this slide changed in fourteen months,
-what was worth learning?
--->
-
----
-
 # What didn't change
 
-Every row on that slide was an <span class="accent">implementation</span> moving.
+Bigger windows. On-demand tools. Self-editing context. Managed memory.
+In a year, every <span class="accent">implementation</span> moved.
 
 The questions underneath stayed exactly where they were:
 
@@ -1088,9 +1044,11 @@ The tools got a year better. <span class="accent">The decisions are still yours.
 
 <!--
 Speaker notes:
-This is the payoff for the previous slide, and it's the thesis of the talk.
-Every single thing that changed was an implementation detail.
-Better windows, cheaper tools, self-editing context, managed memory.
+This is the thesis of the talk. Say the first line fast, as a list:
+in the last year windows hit a million tokens, tool definitions started loading
+on demand, agents began clearing their own stale context mid-session,
+and memory became a managed service with audit logs on every write.
+Every single one of those was an implementation detail.
 Not one of them answered a question on this list.
 A million-token window doesn't tell you what belongs in it.
 A managed memory service doesn't tell you what's worth remembering.
@@ -1107,11 +1065,11 @@ The automation keeps arriving. It keeps not deciding what your agent should know
 
 # Close
 
-The tools are already there. The models are already capable enough.
-
 Context engineering is not something you install.
 
 **<span class="accent">It's how you think about what your agents know.</span>**
+
+Stateless by default. **<span class="accent">Stateful by design.</span>**
 
 <!--
 Speaker notes:
@@ -1125,6 +1083,8 @@ the discipline is the same.
 Decide what your agents know. Decide when they know it.
 Make sure that knowledge survives the boundary.
 That's context engineering.
+Then the title, one last time: every agent starts stateless. That's the default.
+Stateful is something you design. Pause on "by design."
 Thank the room. Open for questions.
 -->
 
