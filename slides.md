@@ -197,7 +197,7 @@ Hold the rest: that failure has a name, and it's the first one on the next slide
 
 - **<span class="accent">Context confusion</span>** — too many tools or irrelevant definitions cause wrong tool calls
 - **<span class="accent">Context distraction</span>** — accumulated history causes the model to echo noise instead of reason
-- **<span class="accent">Context poisoning</span>** — stale *or hostile* content enters once, then is re-read every session after
+- **<span class="accent">Context poisoning</span>** — an error *or hostile* content enters once, then keeps being re-read — every session after, once it reaches memory
 - **<span class="accent">Context clash</span>** — contradictory information produces inconsistent behavior
 
 <div class="callout">
@@ -208,16 +208,19 @@ Three of these are hygiene. <span class="accent">Poisoning is a security problem
 
 <!--
 Speaker notes:
-These are the four named failure modes from the research community.
+These four names come from Drew Breunig's "How Long Contexts Fail" (June 2025).
 They map directly to what we just saw in the table.
 Context confusion: tool definitions eating thousands of tokens before any work starts.
 The model sees 46 tools and starts calling the wrong ones.
-One study: a model failed completely with 46 tools, worked fine with 19.
+One study: a small model, Llama 3.1 8B, failed with 46 tools and worked with 19.
+Frontier models tolerate more tools, but the direction is the same.
 The context wasn't too long. It was too crowded.
 Context distraction: conversation history and tool results accumulating over a long session.
 The model stops reasoning from first principles and starts echoing recent content.
-Context poisoning: stale decisions, outdated architecture notes, superseded requirements
-all sitting in context alongside current work. The agent builds on bad foundations.
+Context poisoning: in Breunig's definition, a hallucination or bad tool output
+enters the context and gets referenced again and again. The agent builds on bad foundations.
+I extend it to memory: once the error is written to a memory file,
+it comes back every session — and if it was hostile, it's an injection that persists.
 Context clash: the system prompt says one thing, a retrieved document says another.
 The agent can't reconcile it and produces inconsistent output.
 The next two slides show what degradation looks like in practice,
@@ -228,13 +231,13 @@ with real measurements.
 
 # Lost in the middle
 
-Models don't degrade uniformly. They show a **U-shaped attention curve**: best recall at the start and end of context, worst in the middle.
+Models don't degrade uniformly. They show a **U-shaped performance curve**: best recall at the start and end of context, worst in the middle.
 
-Liu et al., **2023**: information buried in the middle dropped accuracy by up to **<span class="accent">30 percentage points</span>** — on that year's models and tasks.
+Liu et al., **2023**: information buried in the middle dropped accuracy by **<span class="accent">more than 20 percentage points</span>** — below answering with no documents at all, on that year's models and tasks.
 
 The curve has flattened since. It has not gone away.
 
-![Lost in the Middle — U-shaped attention curve](/src/lost-in-middle.png)
+![Lost in the Middle — U-shaped performance curve](/src/lost-in-middle.png)
 
 <!--
 Speaker notes:
@@ -242,12 +245,13 @@ This is the empirical proof that the degradation point is not theoretical.
 The original research tested multi-document question answering: same question,
 same documents, but the position of the relevant document varied.
 Performance was highest when the answer was at the start or end of the context.
-When it was in the middle, accuracy dropped by 30+ percentage points.
-Think about what this means for a session that starts with clear instructions
-and then accumulates 50 tool calls worth of output. Those original instructions
-are now buried in the middle. They effectively disappear.
+When it was in the middle, accuracy dropped by more than 20 percentage points —
+for GPT-3.5, below what it scored with no documents at all.
+Think about what this means for a long session. The spec you loaded at turn ten
+is, fifty tool calls later, sitting in the middle of the window.
+That's the zone where recall is weakest.
 This is why index-first loading matters: critical orientation information
-always stays at the top, not buried under accumulated noise.
+goes at the very start, the position models recall best — and it stays there.
 Nuance worth knowing for Q&A: newer frontier models are
 improving on this. Frame it as a design principle, not an unsolved crisis:
 bounded, structured context is cheaper and more predictable regardless.
@@ -302,9 +306,7 @@ Left unmanaged, context doesn't just fill up. It rots.
 Worth knowing for Q&A: the original report was July 2025, and the finding has
 since been reproduced outside question answering — long-horizon search agents
 and classifier monitors show the same curve. It's a property of long inputs,
-not a quirk of one benchmark. And million-token windows haven't fixed it:
-they still sag well before a hundred thousand. Bigger windows move the middle.
-They don't remove it.
+not a quirk of one benchmark.
 -->
 
 ---
@@ -335,6 +337,10 @@ Procedural memory is how the agent behaves. System prompts, rule files, CLAUDE.m
 This is where behavioral consistency lives across sessions.
 Associative memory is what the agent has learned about you.
 Preferences, patterns, working style. Cross-session, cross-project.
+Q&A note on the taxonomy: the first four types come from CoALA
+(Sumers et al., 2023), the standard framework for agent memory.
+Associative is my addition. Recent agent-memory surveys cover the same layer
+as user-centric memory: preferences and history kept to personalize the agent.
 The techniques we'll cover apply across all five types,
 but the highest leverage is on semantic memory — it's the layer
 that compounds most clearly as a project grows.
@@ -453,7 +459,9 @@ What project is this? What was the last decision? Where did you leave off?
 that answers those questions. A dispatch table, not a document.
 
 ```md
-# AGENTS.md — payments-refactor
+# AGENTS.md
+
+Orient here first. This file points; it doesn't explain.
 
 - Current state → `docs/state.md` (read first)
 - Architecture → `docs/architecture.md`
@@ -478,7 +486,8 @@ automatically at session start. No instruction needed, no tool call. They're alr
 That's exactly why they should stay an index — small, pointing elsewhere — not a knowledge dump.
 
 Bonus connection: this technique also maximizes prompt cache hits.
-Stable content loaded first means the cache prefix stays consistent across sessions.
+Stable content loaded first means the cache prefix stays consistent from turn to turn.
+(Caches expire in minutes to an hour, so the win is within a session, not overnight.)
 Index-first loading is also cache-first loading. Same discipline, two benefits.
 -->
 
@@ -665,11 +674,13 @@ The trade is real and worth naming: the sub-agent doesn't have your context,
 so it can't use what you already established. You pay for isolation
 in re-explanation. For wide, dirty, throwaway work, that trade is almost always good.
 For work that needs the thread of the conversation, it isn't.
-Then the closing line. The field has settled on four operations:
-write, select, compress, isolate. Techniques one through three
-were write, select and compress. This is the fourth.
-If someone asks what to adopt first — it's this one, because it's the only
-technique whose savings grow as the project gets bigger.
+Then the closing line. The four operations come from LangChain's framing (June 2025),
+now widely used: write, select, compress, isolate.
+Between them, techniques one through three cover the first three:
+index-first and phase-based loading are select; summarization is write and compress.
+This is the fourth.
+If someone asks what to adopt first — it's this one, because its savings grow fastest
+as the project gets bigger: the bigger the codebase, the more every search reads.
 -->
 
 ---
@@ -709,11 +720,13 @@ Speaker notes:
 This is the first decision and it shapes everything else.
 Inside the tool: easiest to start, hardest to escape.
 Your memory is now owned by the vendor. Switch tools, lose memory.
-Cursor Memories, for example, are deliberately per-project.
-When you switch to Claude Code or a local model, they don't come with you.
+ChatGPT's or Claude's app memory, for example, lives with that product.
+When you switch to Claude Code, Cursor or a local model, it doesn't come with you.
 Inside the repo: this row aged the best. With AGENTS.md, the repo is where
 project memory belongs — versioned, reviewed in the same PR as the code,
 and read natively by every major coding agent. Switch tools, keep memory.
+One caveat for Claude Code users: it reads AGENTS.md only as a fallback
+when there's no CLAUDE.md (since September 2026), unless you enable both in /config.
 The limit is scope: the repo only knows about the repo.
 Outside both: the hardest to set up, and the only one that crosses projects.
 Your preferences, your working style, the decision you made on project A
@@ -753,11 +766,12 @@ A filesystem with discipline is often enough.
 
 The MCP point is worth a separate beat:
 MCP servers solve a real problem — tool integration, discovery.
-But every MCP call loads a tool manifest into your context window.
-Some manifests are 7 tools. Some are 1,200.
-At 1,200 tools, every single message in a session costs extra tokens
-just for the manifest. That's a tax on every interaction, paid whether
-you use those tools or not.
+But every tool definition a server exposes is sent with every request.
+Some servers expose a handful of tools. Some expose hundreds.
+Without deferred loading, every single message in a session carries those definitions.
+That's a tax on every interaction, paid whether you use those tools or not.
+Clients with tool search — Claude Code among them — now load definitions on demand,
+so check what yours does.
 Know what you're paying before you commit to the infrastructure.
 
 Ordering rule (connects to prompt caching):
@@ -960,7 +974,8 @@ The context engineering discipline is the same at every scale.
 What changes is the write layer.
 
 On the MCP point — be precise about when you need it.
-Project memory in the repo needs no service: every tool already reads AGENTS.md.
+Project memory in the repo needs no service: every major tool already reads AGENTS.md —
+Claude Code as a fallback when there's no CLAUDE.md.
 Memory that lives outside the repo is different. Tools don't share
 a folder on your laptop, so they need a shared interface to write to it.
 That's where MCP comes in: Mem0's OpenMemory and Zep's Graphiti both ship MCP servers
@@ -977,7 +992,7 @@ That's the architecture. The discipline we covered is what makes the memory laye
 | ------------------------- | ------------------------------------- | ------------------------ | ------------------ |
 | Managed memory API        | Extracted facts, indexed for you      | Mem0, Supermemory        | The vendor's store |
 | Temporal knowledge graph  | Facts with a *valid from* / *until*   | Zep / Graphiti           | Graph schema + DB  |
-| Memory-first agent runtime| The agent's own editable state        | Letta (ex-MemGPT), Cognee| The whole runtime  |
+| Memory-first agent runtime| The agent's own editable state        | Letta (ex-MemGPT)        | The whole runtime  |
 | Filesystem-native         | A file                                | AGENTS.md + markdown     | None. It's a repo  |
 
 Only one of these answers the staleness problem by design: <span class="accent">the temporal graph knows *when* a fact was true.</span>
