@@ -77,44 +77,6 @@ This sets up the larger scale section later without jumping ahead.
 
 ---
 
-# Prompt engineering vs Context engineering
-
-**Prompt engineering**
-What you say to the agent.
-
-**Context engineering**
-What the agent already knows before you say anything.
-
-<!--
-Speaker notes:
-This distinction is the reframe everything else depends on.
-Prompt engineering gets a lot of attention. It's visible, it's immediate, it feels like leverage.
-Context engineering is invisible when it works. You don't notice it.
-But it's where the real compounding happens.
-In my experience, it's the higher-leverage skill when building with AI agents.
-Not because prompts don't matter. They do.
-But because context is upstream of every prompt you'll ever write.
--->
-
----
-
-# Context engineering
-
-The discipline of deciding:
-
-- **<span class="accent">what</span>** your agents know
-- **<span class="accent">when</span>** they know it
-- **<span class="accent">how</span>** that knowledge survives session boundaries and tool switches
-
-<!--
-Speaker notes:
-This is the working definition we'll use for the rest of the talk.
-Simple. Three dimensions.
-We'll cover all three through the techniques.
--->
-
----
-
 # The instinct: fix it with a better prompt
 
 _"Here's what we discussed. Here's what we decided. Please continue."_
@@ -130,6 +92,41 @@ You become the memory. That's the wrong design.
 The problem isn't what you say at the handoff.
 It's that nothing was persisted before the handoff happened.
 -->
+
+---
+
+# Prompt engineering vs Context engineering
+
+**Prompt engineering**<br>
+What you say to the agent.
+
+**Context engineering**<br>
+What the agent already knows before you say anything.
+
+The discipline of deciding:
+
+- **<span class="accent">what</span>** your agents know
+- **<span class="accent">when</span>** they know it
+- **<span class="accent">how</span>** that knowledge survives session boundaries and tool switches
+
+<!--
+Speaker notes:
+This distinction is the reframe everything else depends on.
+Prompt engineering gets a lot of attention. It's visible, it's immediate, it feels like leverage.
+Context engineering is invisible when it works. You don't notice it.
+But it's where the real compounding happens.
+In my experience, it's the higher-leverage skill when building with AI agents.
+Not because prompts don't matter. They do.
+But because context is upstream of every prompt you'll ever write.
+Then the working definition we'll use for the rest of the talk. Three dimensions:
+what, when, and how it survives. We'll cover all three through the techniques.
+-->
+
+<style>
+h1 + p {
+  opacity: 1;
+}
+</style>
 
 ---
 
@@ -223,6 +220,8 @@ I extend it to memory: once the error is written to a memory file,
 it comes back every session — and if it was hostile, it's an injection that persists.
 Context clash: the system prompt says one thing, a retrieved document says another.
 The agent can't reconcile it and produces inconsistent output.
+The fix is an explicit authority order: your rules first, then what was decided
+in this session, then retrieved memory. A stale note must never outrank today's decision.
 The next two slides show what degradation looks like in practice,
 with real measurements.
 -->
@@ -307,45 +306,9 @@ Worth knowing for Q&A: the original report was July 2025, and the finding has
 since been reproduced outside question answering — long-horizon search agents
 and classifier monitors show the same curve. It's a property of long inputs,
 not a quirk of one benchmark.
--->
-
----
-
-# Types of memory
-
-| Type               | What it is                                     | Lives where               | Who writes it            |
-| ------------------ | ---------------------------------------------- | ------------------------- | ------------------------ |
-| Working memory     | Current session state, active task             | Context window            | The model, automatically |
-| Episodic memory    | Event logs, session history                    | Experiences / logs        | The runtime, by default  |
-| Semantic memory    | Declarative knowledge, architecture, decisions | Reference documents       | You, deliberately        |
-| Procedural memory  | Skills, rules, behavioral instructions         | System prompt, rule files | You, deliberately        |
-| Associative memory | Patterns, preferences, learned behaviors       | Preferences / profiles    | Accrues from use         |
-
-The column that decides everything is the last one. <span class="accent">The layers worth investing in are the ones nobody writes unless you do.</span>
-
-<!--
-Speaker notes:
-Not all memory is the same problem.
-Working memory is what the agent sees right now. It's in the context window.
-It's fast, it's precise, and it resets completely when the session ends.
-Episodic memory is what happened. Session logs, conversation history.
-Useful for recovery and audit. Too expensive to load by default.
-Semantic memory is what the agent knows. Architecture decisions, conventions,
-project structure. This is the layer most worth investing in.
-It's also the layer most developers neglect.
-Procedural memory is how the agent behaves. System prompts, rule files, CLAUDE.md.
-This is where behavioral consistency lives across sessions.
-Associative memory is what the agent has learned about you.
-Preferences, patterns, working style. Cross-session, cross-project.
-Q&A note on the taxonomy: the first four types come from CoALA
-(Sumers et al., 2023), the standard framework for agent memory.
-Associative is my addition. Recent agent-memory surveys cover the same layer
-as user-centric memory: preferences and history kept to personalize the agent.
-The techniques we'll cover apply across all five types,
-but the highest leverage is on semantic memory — it's the layer
-that compounds most clearly as a project grows.
-Four of these five persist beyond the session. Only working memory doesn't.
-That split is the next slide.
+And if someone cites a big needle-in-a-haystack score: NIAH measures lexical retrieval,
+not reasoning across what was retrieved. It's the benchmark that most overstates
+how healthy long context is.
 -->
 
 ---
@@ -359,6 +322,7 @@ That split is the next slide.
 | Cost | Tokens on every single turn | Storage, plus a load when you ask |
 | Fails by | Rot, distraction, overflow | Staleness, drift, contradiction |
 | Cleared by | Closing the session | Only by you |
+| Written by | The model, as it works | You, deliberately — or nobody |
 
 <div class="callout">
 
@@ -378,8 +342,14 @@ it starts contradicting the code it describes. Nobody notices until
 the agent confidently builds on a decision you reversed two months ago.
 The important beat: you cannot fix a long-term memory problem
 by buying a bigger context window. A bigger desk does not file anything.
+The "written by" row is the one that decides everything.
+The layers worth investing in are the ones nobody writes unless you do:
+decisions, conventions, architecture. That's where the leverage compounds.
 Stateless by default is the short-term reality.
 Stateful by design is the long-term choice.
+Q&A note on taxonomy: the finer split — working, episodic, semantic, procedural —
+comes from CoALA (Sumers et al., 2023), the standard framework for agent memory.
+Recent agent-memory surveys add user-centric memory: preferences kept to personalize the agent.
 -->
 
 ---
@@ -405,7 +375,7 @@ Four operations. Almost everyone builds the first two and stops.
 Write: the hard question isn't how, it's what. The filter is durability.
 Would this still be true in three months? A decision is durable.
 A conversation is not. If you write everything, you've built a log,
-and we already said logs are expensive for agents.
+and logs are useful for humans but expensive for agents.
 Read: covered by index-first and phase-based loading. Named file, named phase.
 Update: this is the one people skip, and it's the one that causes damage.
 You changed payment provider. The old note still says Stripe.
@@ -419,6 +389,8 @@ Anything you might need again lives on demand, in logs, in git.
 What lives in the default load has to earn that seat every session.
 If nothing ever leaves, the load cost only goes up, and one day
 the memory layer costs more to read than it saves.
+So any file agents load by default needs a size contract: a fixed line cap.
+If it can grow forever, it will.
 -->
 
 ---
@@ -430,10 +402,10 @@ layout: section
 <!--
 Speaker notes:
 Four techniques. Each one is aimed at a failure mode we've already named:
-1. Index-first loading — lost in the middle: orientation always sits at the top.
+1. Index-first loading — session amnesia: orientation loads first, at the top of the window where recall is best.
 2. Anchored summarization — context rot: a bounded state doc instead of a transcript.
-3. Phase-based, just-in-time loading — distraction and confusion: history and tools load only when a step needs them.
-4. Sub-agent isolation — the residue of search.
+3. Phase-based, just-in-time loading — confusion: files and tools load only when a step needs them.
+4. Sub-agent isolation — distraction: the residue of search never enters the main window.
 The other two, clash and poisoning, are memory problems.
 They're answered by the lifecycle's update rule and by the write discipline in the decision space.
 The first three are about what goes into the context. The fourth is about what stays out.
@@ -448,7 +420,7 @@ We'll see what changes at each step.
 
 <div class="callout">
 
-**Prevents:** cold start — the agent doesn't know where it is or what it's doing.
+**Prevents:** session amnesia — the agent doesn't know where it is or what it's doing.
 
 </div>
 
@@ -545,6 +517,13 @@ Logs are useful for humans. They are expensive for agents.
 An overwritten state document stays bounded, stays useful, stays cheap to load.
 The developer's next session loads this instead of a 50-turn transcript.
 Structured, dense, loadable in seconds.
+If you use a coding agent, you've seen a version of this already:
+/compact in Claude Code, /compact in Codex CLI, and auto-compaction when the window fills up.
+That's summarization inside one session — useful, but the model decides what survives,
+and the result dies with the session.
+Anchored summarization is the deliberate version: you own the structure,
+it lives on disk, and tomorrow's session starts from it.
+Compaction is the emergency brake. The state document is the plan.
 -->
 
 ---
@@ -553,7 +532,7 @@ Structured, dense, loadable in seconds.
 
 <div class="callout">
 
-**Prevents:** context distraction and confusion — history, files and tools the current step never needs.
+**Prevents:** context confusion — files and tools the current step never needs.
 
 </div>
 
@@ -597,6 +576,7 @@ and the stripe-integration notes. It does not load the session history,
 unrelated modules, or past decisions.
 And the same rule applies to tools: the 46-versus-19 result is a selection problem.
 Tool definitions that load when a step needs them are the fix for context confusion.
+Clients with tool search — Claude Code among them — now do this by default, so check what yours does.
 The numbers are not incremental: Anthropic's "Code execution with MCP" post
 (November 2025) exposed tools as code the agent discovers when needed,
 and one Google Drive to Salesforce task went from 150k tokens to 2k.
@@ -606,18 +586,6 @@ at a cost that stays predictable as the project grows.
 But there's a gap left, and it's the one the next technique closes.
 All three of these assume you know what to load. Finding that out
 is itself expensive, and everything you read while searching stays behind.
-
-Q&A preparation — four named failure modes worth knowing cold:
-- Context poisoning: a hallucination or bad tool output enters the context
-  and gets compounded over subsequent steps. Fixed by pruning, validation,
-  and reviewing what gets written to memory.
-- Context distraction: context grows so long the model over-relies on recent
-  history and stops reasoning from first principles. Fixed by compression.
-- Context confusion: too many tools or irrelevant content causes the model
-  to call the wrong tools or produce low-quality outputs. Fixed by selection.
-- Context clash: new information contradicts something already in context,
-  producing inconsistent behavior. Fixed by establishing a clear authority order:
-  system prompt > retrieved facts > conversation history.
 -->
 
 ---
@@ -626,7 +594,7 @@ Q&A preparation — four named failure modes worth knowing cold:
 
 <div class="callout">
 
-**Prevents:** context pollution — the search for the answer costing more than the answer.
+**Prevents:** context distraction — the search for the answer costing more than the answer.
 
 </div>
 
@@ -679,8 +647,9 @@ now widely used: write, select, compress, isolate.
 Between them, techniques one through three cover the first three:
 index-first and phase-based loading are select; summarization is write and compress.
 This is the fourth.
-If someone asks what to adopt first — it's this one, because its savings grow fastest
-as the project gets bigger: the bigger the codebase, the more every search reads.
+If someone asks which technique pays off most as a project grows — it's this one:
+the bigger the codebase, the more every search reads.
+What to adopt first is still the cheapest pair: the index file and the state document.
 -->
 
 ---
@@ -726,7 +695,7 @@ Inside the repo: this row aged the best. With AGENTS.md, the repo is where
 project memory belongs — versioned, reviewed in the same PR as the code,
 and read natively by every major coding agent. Switch tools, keep memory.
 One caveat for Claude Code users: it reads AGENTS.md only as a fallback
-when there's no CLAUDE.md (since September 2026), unless you enable both in /config.
+when there's no CLAUDE.md (since v2.1.277), unless you enable both in /config.
 The limit is scope: the repo only knows about the repo.
 Outside both: the hardest to set up, and the only one that crosses projects.
 Your preferences, your working style, the decision you made on project A
@@ -763,53 +732,28 @@ The state document for this project. The architecture notes for this module.
 If you know where the file is, you don't need search. You need retrieval.
 And retrieval doesn't require infrastructure.
 A filesystem with discipline is often enough.
-
-The MCP point is worth a separate beat:
-MCP servers solve a real problem — tool integration, discovery.
-But every tool definition a server exposes is sent with every request.
-Some servers expose a handful of tools. Some expose hundreds.
-Without deferred loading, every single message in a session carries those definitions.
-That's a tax on every interaction, paid whether you use those tools or not.
-Clients with tool search — Claude Code among them — now load definitions on demand,
-so check what yours does.
-Know what you're paying before you commit to the infrastructure.
-
-Ordering rule (connects to prompt caching):
-Stable content always goes first: index file, architecture notes,
-anything that doesn't change between turns. Dynamic content goes last.
-Providers cache the stable prefix and reuse it across requests.
-Index-first loading is also cache-first loading.
 -->
 
 ---
 
-# How do you keep memory from becoming a liability?
+# Who is allowed to write to memory?
 
-Memory that grows without constraint becomes:
+Every memory entry is an instruction to a future session.
 
-- Too expensive to load
-- Too noisy to be useful
-- Too stale to be trusted
+<div class="callout">
 
-**Four disciplines:**
+<span class="accent">Nothing enters memory without a date, a source, and a review.</span>
 
-1. Overwrite state, never append
-2. Cap reference documents at a fixed line count
-3. Load experiences on demand, never by default
-4. <span class="accent">Nothing enters memory without a date, a source, and a review</span>
+</div>
+
+- **Date** — lets you expire a fact
+- **Source** — lets you debug it
+- **Review** — agent output never becomes agent belief without a human in between
 
 <!--
 Speaker notes:
-This is the maintenance problem. Every memory system faces it eventually.
-The techniques we covered are partly about this: anchored iterative summarization
-is specifically designed to prevent unbounded growth.
-But the principle applies beyond state documents.
-Any file that agents load regularly needs a size contract.
-If it can grow forever, it will. And eventually it will cost more than it's worth.
-The third point is subtle but important: session logs, experience entries,
-historical decisions — these are valuable. But they should never load by default.
-They load when you ask for them. The default load stays small and fast.
-The fourth is the one on the write path, and it's the defense against poisoning.
+The lifecycle covered how memory grows and shrinks. This is the write path,
+and it's the defense against poisoning.
 A date lets you expire a fact. A source lets you debug it.
 And a review — the same diff you'd read before merging code — means
 agent output never becomes agent belief without a human in between.
@@ -817,6 +761,12 @@ Remember: the output of agent A is the input of agent B.
 Prompt injection used to die when you closed the tab.
 Memory poisoning waits for you in tomorrow's session.
 Memory files are code. Merge them like code.
+One more thing: your agents already write memory on their own.
+Claude Code's auto memory is on by default; Codex has memories you can switch on.
+The agent decides what to remember about you and your project, and stores it locally.
+Useful — but nobody reviews what goes in, and it lives on one machine, for one tool.
+Treat it as a convenience layer, not your source of truth. Read it now and then:
+it's what your agent believes about you.
 -->
 
 ---
@@ -897,36 +847,6 @@ as anything else you'd never merge untested.
 -->
 
 ---
-
-# How the field measures memory
-
-| Benchmark       | What it tests                                           | Scale                        |
-| --------------- | ------------------------------------------------------- | ---------------------------- |
-| LoCoMo          | Multi-session conversational recall                     | 50 conversations, ~300 turns |
-| LongMemEval     | Knowledge updates, temporal reasoning, multi-session     | 500 questions, 6 categories  |
-| BEAM            | Memory behavior at production volume                     | 1M and 10M tokens            |
-
-The benchmark everyone quotes — needle in a haystack — is the one that <span class="accent">most overstates</span> how healthy long context is.
-
-<!--
-Speaker notes:
-Brief slide. This is for the people who want to go read something after.
-Three benchmarks define the memory conversation right now.
-LoCoMo is the most widely reported number across memory systems:
-fifty long multi-session conversations, roughly three hundred turns each.
-LongMemEval is the more demanding one — five hundred questions,
-and critically it tests knowledge updates: what happens when a fact changes.
-That's the update operation from the lifecycle slide, measured.
-BEAM is the production-scale one, at one and ten million tokens.
-The point of BEAM is that you cannot solve it by buying a bigger window.
-And the honesty note at the bottom: needle in a haystack is the benchmark
-everyone cites and models score well on it, which is exactly why
-long context looks more solved than it is. NIAH measures lexical retrieval.
-Real tasks need reasoning across what was retrieved. Those are not the same test.
-If someone in Q&A cites a big NIAH number, that's the answer.
--->
-
----
 layout: section
 ---
 
@@ -942,7 +862,7 @@ The problem we started with: you reopen a session and the agent starts cold.
 
 - Resume a feature after three days with no re-explanation
 - The agent knows the last decision, the open questions, the next step
-- Switching models costs nothing: the context travels with you, not with the tool
+- Switching models costs almost nothing: the context travels with you, not with the tool
 
 <!--
 Speaker notes:
@@ -1005,32 +925,14 @@ _The discipline is the same. The write layer is a choice._
 
 <!--
 Speaker notes:
-The useful way to read this table is not by how it's deployed —
-cloud, self-hosted, local — because that's a vendor question.
-Read it by what each one thinks memory actually is. That's the design question.
-Row one, managed memory API: memory is facts, extracted from your conversations
-and indexed for you. Mem0 is the most adopted of these. You get a drop-in
-write and read API and you stop thinking about storage. The trade is
-that the extraction policy is theirs, and the store is theirs.
-Row two, temporal knowledge graph. This is the one worth slowing down on,
-because it's the direct answer to the staleness problem from earlier.
-Zep and Graphiti store facts as a graph with validity intervals —
-not just "we use Stripe" but "we used Stripe, from March until September."
-Every other approach on this slide overwrites the old fact or leaves it to rot.
-This one knows when it was true, and that's a genuinely different capability.
+Read this table by what each approach thinks memory is, not by how it's deployed.
+Slow down on row two, the temporal knowledge graph. It's the direct answer
+to the staleness problem: Zep and Graphiti store "we used Stripe, from March until September."
+Every other row overwrites the old fact or leaves it to rot.
 The cost is a real graph, a real database, and an LLM pass on every write.
-Row three, memory-first runtime: memory isn't a service you call,
-it's the agent's own state, which the agent edits itself. Letta — formerly
-MemGPT — is the reference implementation. The strongest version of the idea,
-and also the biggest commitment: you're not adopting a memory layer,
-you're adopting the runtime that runs your agent.
-Row four: memory is a file. No extraction, no schema, no service.
-And this is the honesty point — a year ago this was the weakest row
-on the slide, the one for people who didn't want infrastructure.
-It isn't anymore. AGENTS.md made plain markdown the most portable option here,
-not the least, because every tool can read it and nothing owns it.
 Then the lock-in column, which is the whole reason the slide exists.
 Read it top to bottom: the vendor's store, a graph schema, an entire runtime, nothing.
+A year ago the file row was the weakest; AGENTS.md made it the most portable.
 That's not an argument for the bottom row. It's an argument for knowing
 which one you signed up for. All four work. None of them work
 without the context engineering discipline underneath.
@@ -1077,33 +979,6 @@ The automation keeps arriving. It keeps not deciding what your agent should know
 -->
 
 ---
-
-# Close
-
-Context engineering is not something you install.
-
-**<span class="accent">It's how you think about what your agents know.</span>**
-
-Stateless by default. **<span class="accent">Stateful by design.</span>**
-
-<!--
-Speaker notes:
-Land this slowly.
-The audience has the techniques. They have the decision space.
-The thing I want them to leave with is simpler than any of that:
-this is not a tool problem. It's a thinking problem.
-Once you have the mental model, the implementation follows.
-Whatever tools they use, whatever models, whatever workflow:
-the discipline is the same.
-Decide what your agents know. Decide when they know it.
-Make sure that knowledge survives the boundary.
-That's context engineering.
-Then the title, one last time: every agent starts stateless. That's the default.
-Stateful is something you design. Pause on "by design."
-Thank the room. Open for questions.
--->
-
----
 layout: center
 ---
 
@@ -1112,6 +987,8 @@ layout: center
   <div class="flex flex-col gap-5 flex-1">
 
   <div class="thank-you-title">Thank you</div>
+
+Stateless by default. **<span class="accent">Stateful by design.</span>**
 
 **Giorgio Galassi** <br>
 Senior Frontend Engineer (Freelancer) · GDG Roma Città Organizer
@@ -1137,6 +1014,45 @@ Senior Frontend Engineer (Freelancer) · GDG Roma Città Organizer
 
 <!--
 Speaker notes:
-Leave contact or social handle here if desired.
-Open Q&A.
+Land this slowly. Context engineering is not something you install.
+It's how you think about what your agents know.
+Whatever tools they use, whatever models, whatever workflow: the discipline is the same.
+Decide what your agents know. Decide when they know it.
+Make sure that knowledge survives the boundary.
+Then the title, one last time: every agent starts stateless. That's the default.
+Stateful is something you design. Pause on "by design."
+Thank the room. Open for questions.
 -->
+
+---
+hide: true
+---
+
+# How the field measures memory
+
+| Benchmark       | What it tests                                           | Scale                        |
+| --------------- | ------------------------------------------------------- | ---------------------------- |
+| LoCoMo          | Multi-session conversational recall                     | 50 conversations, ~300 turns |
+| LongMemEval     | Knowledge updates, temporal reasoning, multi-session     | 500 questions, 6 categories  |
+| BEAM            | Memory behavior at production volume                     | 1M and 10M tokens            |
+
+The benchmark everyone quotes — needle in a haystack — is the one that <span class="accent">most overstates</span> how healthy long context is.
+
+<!--
+Speaker notes:
+Backup slide, after Q&A. Pull it up only if someone asks about benchmarks.
+Three benchmarks define the memory conversation right now.
+LoCoMo is the most widely reported number across memory systems:
+fifty long multi-session conversations, roughly three hundred turns each.
+LongMemEval is the more demanding one — five hundred questions,
+and critically it tests knowledge updates: what happens when a fact changes.
+That's the update operation from the lifecycle slide, measured.
+BEAM is the production-scale one, at one and ten million tokens.
+The point of BEAM is that you cannot solve it by buying a bigger window.
+And the honesty note at the bottom: needle in a haystack is the benchmark
+everyone cites and models score well on it, which is exactly why
+long context looks more solved than it is. NIAH measures lexical retrieval.
+Real tasks need reasoning across what was retrieved. Those are not the same test.
+If someone in Q&A cites a big NIAH number, that's the answer.
+-->
+
