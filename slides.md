@@ -999,9 +999,15 @@ Senior Frontend Engineer (Freelancer) · GDG Roma Città Organizer
     <span class="tag">Context Engineering</span>
   </div>
 
-  <div class="flex flex-col items-start gap-2">
-    <img src="/src/qrcode.png" alt="QR code" class="qr-code w-48 h-48" />
-    <span class="text-sm text-gray-400">Links, slides & more</span>
+  <div class="flex items-start gap-8">
+    <div class="flex flex-col items-center gap-2">
+      <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code w-48 h-48" />
+      <span class="text-sm text-gray-400">All my links</span>
+    </div>
+    <div class="flex flex-col items-center gap-2">
+      <img src="/src/qrcode_slides.png" alt="QR code to the slides" class="qr-code w-48 h-48" />
+      <span class="text-sm text-gray-400">Slides</span>
+    </div>
   </div>
 
   </div>
