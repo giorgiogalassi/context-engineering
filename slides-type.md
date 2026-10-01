@@ -1,6 +1,6 @@
 ---
 theme: default
-title: "Context Engineering: Stateless by Default, Stateful by Design"
+title: "Context Engineering · type"
 author: Giorgio Galassi
 highlighter: shiki
 lineNumbers: false
@@ -11,13 +11,22 @@ mdc: true
 fonts:
   sans: Roboto
   mono: Roboto Mono
+defaults:
+  layout: ruled
+rule: ['Context Engineering', 'Agents · memory · discipline']
 ---
 
-# Context Engineering
-
-## Stateless by Default, Stateful by Design
-
-Giorgio Galassi
+<div class="ta">
+  <div class="ta-hero">
+    <FitText :weight="300" :wdth="100" class="ta-dim">Stateless by default.</FitText>
+    <FitText :weight="900" :wdth="100" class="ta-accent">Stateful by design.</FitText>
+  </div>
+  <div class="ta-foot">
+    <div><b>Short-term</b><span>the desk</span></div>
+    <div><b>Long-term</b><span>the filing cabinet</span></div>
+    <div><b>Giorgio Galassi</b><span>ggalassi.dev</span></div>
+  </div>
+</div>
 
 <!--
 Speaker notes:
@@ -27,14 +36,16 @@ Let the title sit for a second before moving on.
 
 ---
 
-# You open your coding agent.
-
-You worked on a feature yesterday.
-You closed the session.
-
-Today you open it again.
-
-It has no idea who you are.
+<div class="ta">
+  <div class="ta-hero">
+    <FitText :weight="850" :wdth="90">You open your</FitText>
+    <FitText :weight="850" :wdth="90">coding agent.</FitText>
+  </div>
+  <div class="ta-aside">
+    <strong>You worked on a feature yesterday. You closed the session. Today you open it again.</strong>
+    <p>It has no idea who you are.</p>
+  </div>
+</div>
 
 <!--
 Speaker notes:
@@ -51,6 +62,8 @@ This is the problem.
 "How many of you have explained the same thing to an AI agent more than once this week?"
 -->
 
+---
+rule: ['The problem', 'Three failures']
 ---
 
 # Three ways your agent forgets
@@ -76,6 +89,8 @@ This sets up the larger scale section later without jumping ahead.
 -->
 
 ---
+rule: ['The problem', 'The instinct']
+---
 
 # The instinct: fix it with a better prompt
 
@@ -94,20 +109,22 @@ It's that nothing was persisted before the handoff happened.
 -->
 
 ---
+rule: ['The reframe', 'Prompt vs context']
+---
 
-# Prompt engineering vs Context engineering
-
-**Prompt engineering**<br>
-What you say to the agent.
-
-**Context engineering**<br>
-What the agent already knows before you say anything.
+<div class="ta">
+  <ul class="ta-stack">
+    <li><b class="v-light">prompt engineering</b><small><em>What you say</em> to the agent.</small></li>
+    <li><b class="v-heavy">context engineering</b><small><em>What it already knows</em> before you say anything.</small></li>
+  </ul>
 
 The discipline of deciding:
 
 - **<span class="accent">what</span>** your agents know
 - **<span class="accent">when</span>** they know it
 - **<span class="accent">how</span>** that knowledge survives session boundaries and tool switches
+
+</div>
 
 <!--
 Speaker notes:
@@ -122,12 +139,8 @@ Then the working definition we'll use for the rest of the talk. Three dimensions
 what, when, and how it survives. We'll cover all three through the techniques.
 -->
 
-<style>
-h1 + p {
-  opacity: 1;
-}
-</style>
-
+---
+rule: ['Foundations', 'CPU and RAM']
 ---
 
 # What is context?
@@ -156,6 +169,8 @@ This is why context engineering matters. You're not just managing space.
 You're managing attention.
 -->
 
+---
+rule: ['Foundations', 'Seven layers']
 ---
 
 # What competes for that space
@@ -190,6 +205,8 @@ That's the cost you pay on every single turn, for tools you may never use.
 Hold the rest: that failure has a name, and it's the first one on the next slide.
 -->
 
+---
+rule: ['Foundations', 'Four failure modes · Breunig, 2025']
 ---
 
 # When context isn't managed
@@ -231,6 +248,25 @@ with real measurements.
 -->
 
 ---
+rule: ['Evidence', 'Liu et al., 2023']
+---
+
+<div class="ta">
+  <div class="ta-number">
+    <strong style="font-size:17rem">20+</strong>
+    <p>percentage points lost when the answer sits in the middle.<span>Liu et al., 2023: worse than answering with no documents at all, on that year's models.</span></p>
+  </div>
+</div>
+
+<!--
+Speaker notes:
+Beat slide (new in the type deck). Say the number, pause, then the curve on the next slide.
+-->
+
+---
+rule: ['Evidence', 'Liu et al., 2023']
+class: dense
+---
 
 # Lost in the middle
 
@@ -260,6 +296,24 @@ improving on this. Frame it as a design principle, not an unsolved crisis:
 bounded, structured context is cheaper and more predictable regardless.
 -->
 
+---
+rule: ['Evidence', 'Chroma, July 2025']
+---
+
+<div class="ta">
+  <div class="ta-number">
+    <strong style="font-size:12.5rem">18/18</strong>
+    <p>frontier models got worse as the input grew.<span>Chroma, July 2025. Not some, not most. All of them, well below their context limits.</span></p>
+  </div>
+</div>
+
+<!--
+Speaker notes:
+Beat slide (new in the type deck). Let "18 out of 18" land before the charts.
+-->
+
+---
+rule: ['Evidence', 'Chroma, July 2025']
 ---
 
 # Context rot
@@ -316,6 +370,8 @@ how healthy long context is.
 -->
 
 ---
+rule: ['Memory', 'The desk and the filing cabinet']
+---
 
 # Short-term vs long-term memory
 
@@ -356,6 +412,8 @@ comes from CoALA (Sumers et al., 2023), the standard framework for agent memory.
 Recent agent-memory surveys add user-centric memory: preferences kept to personalize the agent.
 -->
 
+---
+rule: ['Memory', 'Write · Read · Update · Forget']
 ---
 
 # The long-term memory lifecycle
@@ -398,10 +456,18 @@ If it can grow forever, it will.
 -->
 
 ---
-layout: section
+rule: ['Part 2', 'The techniques']
 ---
 
-# The Techniques
+<div class="ta">
+  <div class="ta-hero">
+    <FitText :weight="900" :wdth="90">Four techniques.</FitText>
+  </div>
+  <div class="ta-aside">
+    <strong>Each one aimed at a failure mode we already named.</strong>
+    <p>Three decide what goes into the context. The fourth decides what stays out.</p>
+  </div>
+</div>
 
 <!--
 Speaker notes:
@@ -418,6 +484,9 @@ Simple, universal. No special tooling required.
 We'll see what changes at each step.
 -->
 
+---
+rule: ['Technique 1 · Select', 'AGENTS.md']
+class: dense
 ---
 
 # 1. Index-first loading
@@ -467,6 +536,9 @@ Stable content loaded first means the cache prefix stays consistent from turn to
 Index-first loading is also cache-first loading. Same discipline, two benefits.
 -->
 
+---
+rule: ['Technique 2 · Write + Compress', 'The state document']
+class: dense
 ---
 
 # 2. Anchored iterative summarization
@@ -531,6 +603,9 @@ Compaction is the emergency brake. The state document is the plan.
 -->
 
 ---
+rule: ['Technique 3 · Select', 'Phases and just-in-time']
+class: dense
+---
 
 # 3. Phase-based, just-in-time loading
 
@@ -592,6 +667,9 @@ All three of these assume you know what to load. Finding that out
 is itself expensive, and everything you read while searching stays behind.
 -->
 
+---
+rule: ['Technique 4 · Isolate', 'Separate windows']
+class: dense
 ---
 
 # 4. Sub-agent isolation
@@ -657,10 +735,34 @@ What to adopt first is still the cheapest pair: the index file and the state doc
 -->
 
 ---
-layout: section
+rule: ['Technique 4 · Isolate', 'Separate windows']
 ---
 
-# The Decision Space
+<div class="ta">
+  <div class="ta-number">
+    <strong>1</strong>
+    <p>line comes back.<span>The sub-agent reads 20 files, about 40k tokens. The main context pays for one sentence.</span></p>
+  </div>
+</div>
+
+<!--
+Speaker notes:
+Beat slide (new in the type deck). The whole technique in one number.
+-->
+
+---
+rule: ['Part 3', 'The decision space']
+---
+
+<div class="ta">
+  <div class="ta-hero">
+    <FitText :weight="900" :wdth="85">The decisions.</FitText>
+  </div>
+  <div class="ta-aside">
+    <strong>The choices every implementation faces.</strong>
+    <p>Regardless of tool, model or workflow: where memory lives, what stores it, who writes it, how you know it works.</p>
+  </div>
+</div>
 
 <!--
 Speaker notes:
@@ -670,6 +772,8 @@ These are not specific to any one tool or workflow.
 They're the decisions you'll face regardless of how you build this.
 -->
 
+---
+rule: ['Decision · Where', 'Tool, repo, or outside both']
 ---
 
 # Where does memory live?
@@ -710,6 +814,8 @@ project knowledge in the repo, knowledge about you outside it.
 -->
 
 ---
+rule: ['Decision · What', 'Search or retrieval?']
+---
 
 # What storage primitive?
 
@@ -738,6 +844,8 @@ And retrieval doesn't require infrastructure.
 A filesystem with discipline is often enough.
 -->
 
+---
+rule: ['Decision · Who', 'The write path']
 ---
 
 # What makes a memory entry trustworthy?
@@ -774,6 +882,8 @@ it's what your agent believes about you.
 -->
 
 ---
+rule: ['Decision · How do you know', 'Symptoms and numbers']
+---
 
 # How do you know your context is working?
 
@@ -807,6 +917,8 @@ Useful turns: at what point does quality drop? That number is your session budge
 When you know it, you stop being surprised by it — you compact before you hit it.
 -->
 
+---
+rule: ['Decision · How do you know', 'The golden set']
 ---
 
 # Test your context like you test your code
@@ -851,11 +963,22 @@ as anything else you'd never merge untested.
 -->
 
 ---
-layout: section
+rule: ['Part 4', 'Scale']
 ---
 
-# What this enables
+<div class="ta">
+  <div class="ta-hero">
+    <FitText :weight="900" :wdth="90">What this</FitText>
+    <FitText :weight="900" :wdth="90" class="ta-accent">enables.</FitText>
+  </div>
+  <div class="ta-aside">
+    <strong>One developer first, then a team.</strong>
+    <p>Same discipline at every scale. What changes is the write layer.</p>
+  </div>
+</div>
 
+---
+rule: ['What this enables', 'One developer']
 ---
 
 # For a single developer
@@ -878,6 +1001,8 @@ Load the index file at the start of every session.
 That's it. Everything else follows.
 -->
 
+---
+rule: ['What this enables', 'A team, many tools']
 ---
 
 # At larger scale
@@ -908,6 +1033,8 @@ The tools don't talk to each other. They talk to the same memory layer.
 That's the architecture. The discipline we covered is what makes the memory layer useful.
 -->
 
+---
+rule: ['What this enables', 'Four approaches · by lock-in']
 ---
 
 # Four approaches, by what they treat memory as
@@ -943,6 +1070,8 @@ without the context engineering discipline underneath.
 The infrastructure is a choice. The discipline is not optional.
 -->
 
+---
+rule: ['The thesis', 'What didn''t change']
 ---
 
 # What didn't change
@@ -983,43 +1112,37 @@ The automation keeps arriving. It keeps not deciding what your agent should know
 -->
 
 ---
-layout: center
+rule: ['Thank you', 'ggalassi.dev']
 ---
 
-<div class="flex flex-row items-center gap-12 w-full">
-
-  <div class="flex flex-col gap-5 flex-1">
-
-  <div class="thank-you-title">Thank you</div>
-
-Stateless by default. **<span class="accent">Stateful by design.</span>**
-
-**Giorgio Galassi** <br>
-Senior Frontend Engineer (Freelancer) · GDG Roma Città Organizer
-
-  <div class="tags">
-    <span class="tag">Angular</span>
-    <span class="tag">AI Workflows</span>
-    <span class="tag">Context Engineering</span>
+<div class="ta">
+  <div class="ta-hero" style="margin-block:0">
+    <FitText :weight="900" :wdth="100" class="ta-accent">Thank you</FitText>
   </div>
-
-  <div class="flex items-start gap-8">
-    <div class="flex flex-col items-center gap-2">
-      <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code w-48 h-48" />
-      <span class="text-sm text-gray-400">All my links</span>
+  <div class="ta-aside" style="margin-top:0.6rem">
+    <strong>Stateless by default. Stateful by design.</strong>
+    <p>Decide what your agents know, when they know it, and what survives the boundary.</p>
+  </div>
+  <div class="ta-thanks">
+    <div class="who">
+      <b>Giorgio Galassi</b>
+      <span>Senior Frontend Engineer (Freelancer) · GDG Roma Città Organizer</span>
+      <div class="tags" style="margin-top:0.7rem">
+        <span class="tag">Angular</span>
+        <span class="tag">AI Workflows</span>
+        <span class="tag">Context Engineering</span>
+      </div>
     </div>
-    <div class="flex flex-col items-center gap-2">
-      <img src="/src/qrcode_slides.png" alt="QR code to the slides" class="qr-code w-48 h-48" />
-      <span class="text-sm text-gray-400">Slides</span>
+    <div class="qr">
+      <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code" style="width:7.5rem;height:7.5rem" />
+      All my links
     </div>
+    <div class="qr">
+      <img src="/src/qrcode_slides.png" alt="QR code to the slides" class="qr-code" style="width:7.5rem;height:7.5rem" />
+      Slides
+    </div>
+    <img src="/src/profile.png" alt="Giorgio Galassi" class="rounded-full object-cover" style="width:7.5rem;height:7.5rem" />
   </div>
-
-  </div>
-
-  <div class="flex-shrink-0">
-    <img src="/src/profile.png" alt="Giorgio Galassi" class="rounded-full w-60 h-60 object-cover" />
-  </div>
-
 </div>
 
 <!--
@@ -1035,6 +1158,7 @@ Thank the room. Open for questions.
 -->
 
 ---
+rule: ['Backup · Q&A', 'Benchmarks']
 hide: true
 ---
 
@@ -1065,4 +1189,3 @@ long context looks more solved than it is. NIAH measures lexical retrieval.
 Real tasks need reasoning across what was retrieved. Those are not the same test.
 If someone in Q&A cites a big NIAH number, that's the answer.
 -->
-

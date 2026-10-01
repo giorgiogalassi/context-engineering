@@ -54,3 +54,7 @@ All slide content lives in `slides.md`. Speaker notes are in `<!-- -->` comment 
 ## License
 
 ISC
+
+## Alternative style (under evaluation)
+
+`npm run dev:type` runs `slides-type.md`: the same talk in a typography-as-architecture style, with light and dark themes checked for WCAG AA contrast. Previews in `type-sample/`.

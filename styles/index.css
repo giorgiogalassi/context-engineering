@@ -1,3 +1,5 @@
+@import './type.css'; /* slides-type.md only: every rule there is scoped to .ta / .ta-deck */
+
 /* Constrain images on all slides without affecting presenter UI */
 .slidev-layout img {
   max-height: 260px;
