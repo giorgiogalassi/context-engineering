@@ -15,7 +15,7 @@ The slide content lives in `slides.md` at the project root.
 Do not split slides across multiple files unless explicitly asked.
 
 ## Theme
-Use the default Slidev theme unless instructed otherwise.
+Use the default Slidev theme as the base, with the typography-as-architecture layer described below.
 Keep the visual style clean, minimal, and professional.
 No decorative elements that are not in the slide content.
 
@@ -46,9 +46,7 @@ No decorative elements that are not in the slide content.
 - If a layout change breaks a slide visually, report it before applying
 - Keep all work in the project root unless Slidev convention requires otherwise
 
-## Typography-as-architecture version (under evaluation)
-- `slides-type.md` is a full alternative of `slides.md` in the "typography as architecture" style. Same content and speaker notes, plus three number beats (20+, 18/18, 1 line).
-- Pieces: `layouts/ruled.vue` (labelled rule from frontmatter `rule: [left, right]`), `components/FitText.vue` (full-width display lines), `styles/type.css` (all rules scoped to `.ta` / `.ta-deck`, so `slides.md` is unaffected), Roboto Flex loaded in `index.html`.
+## Style: typography as architecture
+- `slides.md` uses the "typography as architecture" style (the former `slides-type.md`, promoted to main on 2026-10-15; the previous default-theme deck is in git history).
+- Pieces: `layouts/ruled.vue` (default layout; labelled rule from frontmatter `rule: [left, right]`), `components/FitText.vue` (full-width display lines), `styles/type.css` (rules scoped to `.ta` / `.ta-deck`), Roboto Flex loaded in `index.html`.
 - Colours in `type.css` are tuned to WCAG AA (4.5:1) in light and dark; use its variables (`--ta-accent`, `--ta-ink`, `--ta-muted`), never hex.
-- Until one version is chosen, content changes must be made in both files.
-- Commands: `npm run dev:type` · `npm run build:type` · `npm run export:type` · `npm run export-dark:type`. Previews in `type-sample/`.

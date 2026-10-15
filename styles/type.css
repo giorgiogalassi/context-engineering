@@ -31,6 +31,7 @@ html.dark .ta-deck, html.dark .ta {
   margin-bottom: 0.5em;
 }
 .ta-deck h1 + p { opacity: 1; color: var(--ta-muted); }
+.ta-deck.lead-ink h1 + p { color: var(--ta-ink); }
 
 /* ---- Brand elements, re-pointed at the accessible palette ---- */
 .ta-deck .accent { color: var(--ta-accent); }

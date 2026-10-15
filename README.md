@@ -42,7 +42,9 @@ Open [http://localhost:3030](http://localhost:3030) in your browser.
 ```
 slides.md          — all slide content and speaker notes
 src/               — images used in slides
-styles/            — custom CSS
+styles/            — custom CSS (type.css: typography-as-architecture style)
+layouts/ruled.vue  — default layout (labelled top rule)
+components/        — FitText and charts
 ```
 
 All slide content lives in `slides.md`. Speaker notes are in `<!-- -->` comment blocks at the bottom of each slide.
@@ -55,6 +57,3 @@ All slide content lives in `slides.md`. Speaker notes are in `<!-- -->` comment 
 
 ISC
 
-## Alternative style (under evaluation)
-
-`npm run dev:type` runs `slides-type.md`: the same talk in a typography-as-architecture style, with light and dark themes checked for WCAG AA contrast. Previews in `type-sample/`.

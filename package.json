@@ -1,16 +1,12 @@
 {
   "name": "context-engineering-stateless-by-default-stateful-by-design",
   "version": "1.0.0",
-  "description": "Context Engineering: Stateless by Default, Stateful by Design \u2014 Giorgio Galassi",
+  "description": "Context Engineering: Stateless by Default, Stateful by Design — Giorgio Galassi",
   "scripts": {
     "dev": "slidev",
     "build": "slidev build",
     "export": "slidev export",
-    "export-dark": "slidev export --dark",
-    "dev:type": "slidev slides-type.md",
-    "build:type": "slidev build slides-type.md --out dist-type",
-    "export:type": "slidev export slides-type.md --output GIORGIO_GALASSI-CONTEXT_ENGINEERING-type.pdf",
-    "export-dark:type": "slidev export slides-type.md --dark --output GIORGIO_GALASSI-CONTEXT_ENGINEERING-type-dark.pdf"
+    "export-dark": "slidev export --dark"
   },
   "author": "Giorgio Galassi",
   "license": "ISC",
