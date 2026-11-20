@@ -271,3 +271,6 @@ html.dark:has(.ta-deck) .talk-footer { color: #8a8a8a; }
 .ta-split .ta-qrs { gap: 1.6rem; align-items: flex-start; }
 .ta-split .ta-qrs .qr-row { flex-direction: column; gap: 0.35rem; text-align: center; }
 .ta-split .ta-qrs span b { white-space: normal; }
+/* Bigger QRs on the thank-you slide (readable from the back of the room). */
+.slidev-layout .ta-split .ta-qrs img.qr-code { width: 7.2rem; height: 7.2rem; }
+.ta-split .ta-qrs { gap: 1.2rem; }

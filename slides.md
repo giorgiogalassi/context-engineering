@@ -1065,7 +1065,7 @@ rule: ['Thank you', 'ggalassi.dev']
   <div class="ta-hero" style="margin-block:0">
     <FitText :weight="900" :wdth="100" class="ta-accent">Thank you</FitText>
   </div>
-  <div class="ta-aside" style="margin-top:0.6rem">
+  <div class="ta-aside" style="margin-top:0.6rem;grid-template-columns:1fr">
     <strong>Stateless by default. Stateful by design.</strong>
   </div>
   <div class="ta-thanks" style="grid-template-columns:1fr;gap:0.6rem;padding-top:0.6rem">
@@ -1086,7 +1086,7 @@ rule: ['Thank you', 'ggalassi.dev']
     <div class="ta-qrs">
       <div class="qr-row">
         <img src="/src/qr-angularday-agenda.png" alt="QR code to the AngularDay agenda" class="qr-code" />
-        <span><b>Rate this talk</b>in the AngularDay app</span>
+        <span><b>Rate this talk</b>AngularDay app</span>
       </div>
       <div class="qr-row">
         <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code" />
