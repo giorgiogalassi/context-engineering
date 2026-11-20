@@ -25,6 +25,10 @@ rule: ['Context Engineering', 'Agents · memory · discipline']
     <div><b>Short-term</b><span>the desk</span></div>
     <div><b>Long-term</b><span>the filing cabinet</span></div>
     <div><b>Giorgio Galassi</b><span>ggalassi.dev</span></div>
+    <div class="ta-qrs"><div class="qr-row">
+      <img src="/src/qr-angularday-agenda.png" alt="QR code to the AngularDay agenda" class="qr-code" />
+      <span><b>Questions? Ratings?</b>use the AngularDay app</span>
+    </div></div>
   </div>
 </div>
 
@@ -1072,6 +1076,10 @@ rule: ['Thank you', 'ggalassi.dev']
         <span class="tag">AI Workflows</span>
         <span class="tag">Context Engineering</span>
       </div>
+    </div>
+    <div class="qr">
+      <img src="/src/qr-angularday-agenda.png" alt="QR code to the AngularDay agenda" class="qr-code" style="width:7.5rem;height:7.5rem" />
+      Rate this talk
     </div>
     <div class="qr">
       <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code" style="width:7.5rem;height:7.5rem" />
