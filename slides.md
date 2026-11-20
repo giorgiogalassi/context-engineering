@@ -1086,7 +1086,7 @@ rule: ['Thank you', 'ggalassi.dev']
     <div class="ta-qrs">
       <div class="qr-row">
         <img src="/src/qr-angularday-agenda.png" alt="QR code to the AngularDay agenda" class="qr-code" />
-        <span><b>Rate this talk</b>in the AngularDay app</span>
+        <span><b>Rate this talk</b>AngularDay app</span>
       </div>
       <div class="qr-row">
         <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code" />
