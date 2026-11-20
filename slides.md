@@ -1060,37 +1060,49 @@ The automation keeps arriving. It keeps not deciding what your agent should know
 rule: ['Thank you', 'ggalassi.dev']
 ---
 
-<div class="ta">
+<div class="ta ta-split">
+  <div class="ta-split-main">
   <div class="ta-hero" style="margin-block:0">
     <FitText :weight="900" :wdth="100" class="ta-accent">Thank you</FitText>
   </div>
   <div class="ta-aside" style="margin-top:0.6rem">
     <strong>Stateless by default. Stateful by design.</strong>
   </div>
-  <div class="ta-thanks">
+  <div class="ta-thanks" style="grid-template-columns:1fr;gap:0.6rem;padding-top:0.6rem">
     <div class="who">
       <b>Giorgio Galassi</b>
       <span>Senior Frontend Engineer (Freelancer) · GDG Roma Città Organizer</span>
-      <div class="tags" style="margin-top:0.7rem">
-        <span class="tag">Angular</span>
-        <span class="tag">AI Workflows</span>
-        <span class="tag">Context Engineering</span>
+      <div class="tags ta-goo-tags" style="margin-top:0.5rem">
+        <svg class="ta-goo-defs" width="0" height="0" aria-hidden="true" focusable="false">
+          <filter id="ta-goo" x="-10%" y="-60%" width="120%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" />
+          </filter>
+        </svg>
+        <div class="ta-goo-row" aria-hidden="true"><span class="tag">Angular</span><span class="tag">AI Workflows</span><span class="tag">Context Engineering</span></div>
+        <div class="ta-label-row"><span class="tag">Angular</span><span class="tag">AI Workflows</span><span class="tag">Context Engineering</span></div>
       </div>
     </div>
-    <div class="qr">
-      <img src="/src/qr-angularday-agenda.png" alt="QR code to the AngularDay agenda" class="qr-code" style="width:7.5rem;height:7.5rem" />
-      Rate this talk
+    <div class="ta-qrs">
+      <div class="qr-row">
+        <img src="/src/qr-angularday-agenda.png" alt="QR code to the AngularDay agenda" class="qr-code" />
+        <span><b>Rate this talk</b>in the AngularDay app</span>
+      </div>
+      <div class="qr-row">
+        <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code" />
+        <span><b>All my links</b></span>
+      </div>
+      <div class="qr-row">
+        <img src="/src/qrcode_slides.png" alt="QR code to the slides" class="qr-code" />
+        <span><b>Slides</b></span>
+      </div>
     </div>
-    <div class="qr">
-      <img src="/src/qrcode_allmylinks.png" alt="QR code to all my links" class="qr-code" style="width:7.5rem;height:7.5rem" />
-      All my links
-    </div>
-    <div class="qr">
-      <img src="/src/qrcode_slides.png" alt="QR code to the slides" class="qr-code" style="width:7.5rem;height:7.5rem" />
-      Slides
-    </div>
-    <div class="rounded-full overflow-hidden" style="width:7.5rem;height:7.5rem;flex:none">
-      <img src="/src/profile.jpg" alt="Giorgio Galassi speaking on stage" style="width:12.75rem;max-width:none;height:auto;margin:-0.4rem 0 0 -5.3rem" />
+  </div>
+  </div>
+  <div class="ta-blob">
+    <div class="ta-blob-back" aria-hidden="true"></div>
+    <div class="ta-blob-photo">
+      <img src="/src/profile.jpg" alt="Giorgio Galassi speaking on stage" />
     </div>
   </div>
 </div>
