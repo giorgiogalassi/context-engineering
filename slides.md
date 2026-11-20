@@ -1065,7 +1065,7 @@ rule: ['Thank you', 'ggalassi.dev']
   <div class="ta-hero" style="margin-block:0">
     <FitText :weight="900" :wdth="100" class="ta-accent">Thank you</FitText>
   </div>
-  <div class="ta-aside" style="margin-top:0.6rem">
+  <div class="ta-aside" style="margin-top:0.6rem;grid-template-columns:1fr">
     <strong>Stateless by default. Stateful by design.</strong>
   </div>
   <div class="ta-thanks" style="grid-template-columns:1fr;gap:0.6rem;padding-top:0.6rem">
