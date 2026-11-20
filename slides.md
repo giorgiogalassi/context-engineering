@@ -1089,7 +1089,9 @@ rule: ['Thank you', 'ggalassi.dev']
       <img src="/src/qrcode_slides.png" alt="QR code to the slides" class="qr-code" style="width:7.5rem;height:7.5rem" />
       Slides
     </div>
-    <img src="/src/profile.png" alt="Giorgio Galassi" class="rounded-full object-cover" style="width:7.5rem;height:7.5rem" />
+    <div class="rounded-full overflow-hidden" style="width:7.5rem;height:7.5rem;flex:none">
+      <img src="/src/profile.jpg" alt="Giorgio Galassi speaking on stage" style="width:12.75rem;max-width:none;height:auto;margin:-0.4rem 0 0 -5.3rem" />
+    </div>
   </div>
 </div>
 
